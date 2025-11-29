@@ -574,6 +574,7 @@
     let currentLevel = 1;
     let currentTarget = null;
     let currentInserted = 0; // 单位：角
+    let currentCoinStack = []; // 记录本局投入的硬币历史 (为了正确退款)
     
     // 钱包库存 (单位：个)
     let walletStock = {
@@ -591,6 +592,7 @@
 
     function startLevel(level) {
         currentInserted = 0;
+        currentCoinStack = []; // 清空堆栈
         updateScreen();
         
         // 清理出货口
@@ -666,6 +668,9 @@
         pickupSlot.appendChild(item);
         Sounds.clunk(); // 音效：掉落声
         
+        // 钱被机器收走了，不需要退回，清空堆栈
+        currentCoinStack = [];
+
         // 隐藏展示区
         document.getElementById('product-area').style.opacity = '0';
         
@@ -700,11 +705,13 @@
         setTimeout(() => {
             screen.style.backgroundColor = '';
             
-            // 退款逻辑：简单退回
-            let refund = currentInserted;
-            while(refund >= 10) { walletStock[10]++; refund -= 10; }
-            while(refund >= 5) { walletStock[5]++; refund -= 5; }
-            while(refund >= 1) { walletStock[1]++; refund -= 1; }
+            // 退款逻辑：原路退回 (Stack)
+            // 把刚才投进去的硬币原样还给钱包
+            currentCoinStack.forEach(val => {
+                walletStock[val]++;
+            });
+            currentCoinStack = []; // 清空堆栈
+            
             updateWalletUI();
 
             currentInserted = 0;
@@ -792,6 +799,9 @@
                 // 扣除库存
                 walletStock[coinValue]--;
                 updateWalletUI();
+
+                // 记录历史
+                currentCoinStack.push(coinValue);
 
                 // 增加已投金额
                 currentInserted += coinValue;
