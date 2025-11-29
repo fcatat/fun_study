@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 动态 SVG Favicon: 笑脸+书本 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>😊</text></svg>">
     <title>安安的学习乐园</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Zcool+KuaiLe&display=swap');
@@ -410,8 +412,17 @@
             title: "森林魔法集市",
             icon: "⚖️",
             desc: "等量代换思维训练",
-            url: "math_game.html",
+            url: "balance.html",
             color: "#FFF9C4" // 淡黄背景
+        },
+        {
+            id: 'vending_machine',
+            grade: 0, // 一年级
+            title: "动物售货机",
+            icon: "🪙",
+            desc: "认识元角分",
+            url: "vending.html",
+            color: "#F8BBD0" // 淡粉背景
         },
         {
             id: 'coming_soon',
@@ -474,6 +485,8 @@
     function updateNameDisplay() {
         document.getElementById('sidebar-name').innerText = userName;
         document.getElementById('welcome-msg').innerText = `${userName}，开心的玩吧，have fun！`;
+        // 动态更新网页标题
+        document.title = `${userName}的学习乐园`;
     }
 
     // --- 渲染逻辑 ---

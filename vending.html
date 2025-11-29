@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>动物售货机 (认识货币)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zcool+KuaiLe&display=swap');
+
+        :root {
+            --bg-color: #F3E5F5;
+            --machine-color: #FF8A65;
+            --machine-dark: #D84315;
+            --screen-bg: #263238;
+            --screen-text: #76FF03;
+            --coin-1yuan: #ECEFF1;
+            --coin-5jiao: #FFD54F;
+            --coin-1jiao: #CFD8DC;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-color);
+            font-family: "Zcool KuaiLe", "Comic Sans MS", cursive, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+
+        /* 返回按钮 */
+        .btn-home {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: white;
+            border: 2px solid var(--machine-dark);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        header {
+            padding: 15px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            color: #880E4F;
+            font-size: 1.8rem;
+        }
+
+        .level-info {
+            background: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 5px;
+            color: #880E4F;
+            font-size: 1.2rem;
+        }
+
+        /* 售货机主体 */
+        .machine-container {
+            background: var(--machine-color);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: inset -10px 0 rgba(0,0,0,0.1), 0 10px 20px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            border: 4px solid var(--machine-dark);
+            border-bottom: none;
+        }
+
+        .machine-header {
+            background: rgba(0,0,0,0.1);
+            width: 100%;
+            text-align: center;
+            padding: 5px 0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: white;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+        }
+
+        /* 商品展示窗 */
+        .display-window {
+            background: white;
+            width: 100%;
+            height: 180px;
+            border-radius: 15px;
+            border: 4px solid #B0BEC5;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .product-display-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.3s;
+        }
+
+        .product-emoji {
+            font-size: 80px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .price-tag {
+            background: #FFC107;
+            color: #3E2723;
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-size: 1.8rem;
+            margin-top: 10px;
+            border: 2px solid #FF6F00;
+            box-shadow: 0 3px 0 #FF6F00;
+        }
+
+        /* 投币区 */
+        .control-area {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .coin-slot-panel {
+            background: #CFD8DC;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #90A4AE;
+            width: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slot-hole {
+            width: 10px;
+            height: 40px;
+            background: #37474F;
+            border-radius: 5px;
+            margin: 10px 0;
+            box-shadow: inset 2px 2px 5px black;
+            border: 2px solid #B0BEC5;
+        }
+
+        .slot-label {
+            font-size: 0.9rem;
+            color: #546E7A;
+        }
+
+        /* 显示屏 */
+        .lcd-screen {
+            flex: 1;
+            background: var(--screen-bg);
+            margin-left: 15px;
+            height: 80px;
+            border-radius: 5px;
+            border: 4px solid #546E7A;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+            box-shadow: inset 0 0 10px black;
+        }
+
+        .lcd-label {
+            color: #90A4AE;
+            font-size: 0.8rem;
+        }
+        .lcd-value {
+            color: var(--screen-text);
+            font-family: "Courier New", monospace;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--screen-text);
+        }
+        
+        /* 出货口 */
+        .pickup-slot {
+            width: 80%;
+            height: 60px;
+            background: #333;
+            border-radius: 0 0 10px 10px;
+            margin-top: auto;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible;
+        }
+        
+        .purchased-item {
+            font-size: 50px;
+            animation: dropOut 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        @keyframes dropOut {
+            0% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* 钱包/操作台 */
+        .wallet-panel {
+            background: #5D4037;
+            width: 100%;
+            padding: 15px 0 30px 0; /* bottom padding for safe area */
+            border-top: 5px solid #3E2723;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+            z-index: 50;
+        }
+        
+        .wallet-balance {
+             position: absolute;
+             top: -40px;
+             left: 50%;
+             transform: translateX(-50%);
+             background: #8D6E63;
+             color: #FFF;
+             padding: 5px 20px;
+             border-radius: 20px;
+             border: 2px solid #D7CCC8;
+             font-size: 1.2rem;
+             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .coin {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: grab;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.5);
+            position: relative;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+        .coin:active { transform: scale(0.95); cursor: grabbing; }
+        
+        .coin.disabled {
+            opacity: 0.5;
+            filter: grayscale(1);
+            cursor: not-allowed;
+        }
+
+        .coin-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #D32F2F;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            border: 2px solid white;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.2);
+        }
+
+        .coin-1yuan {
+            background: var(--coin-1yuan);
+            color: #78909C;
+            border: 4px solid #CFD8DC;
+        }
+        .coin-5jiao {
+            background: var(--coin-5jiao);
+            color: #8D6E63;
+            border: 4px solid #FBC02D;
+        }
+        .coin-1jiao {
+            background: var(--coin-1jiao);
+            color: #90A4AE;
+            border: 4px solid #B0BEC5;
+            width: 60px;
+            height: 60px;
+            font-size: 0.9rem;
+        }
+
+        .coin span { font-size: 1.2rem; pointer-events: none; }
+        .coin small { font-size: 0.7rem; pointer-events: none; }
+
+        /* 反馈动画 */
+        .feedback-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .feedback-overlay.visible { opacity: 1; pointer-events: auto; }
+        
+        .feedback-box {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.3s;
+        }
+        .feedback-overlay.visible .feedback-box { transform: scale(1); }
+        
+        .feedback-emoji { font-size: 60px; display: block; margin-bottom: 10px; }
+        .feedback-text { font-size: 1.5rem; color: #333; }
+        
+        /* 已购商品清单 */
+        .inventory-bar {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            width: 60px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 10px 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .inventory-title { font-size: 0.8rem; color: #555; margin-bottom: 5px; }
+        .inventory-item { font-size: 1.5rem; }
+
+        /* 拖拽时的样式 */
+        .dragging-coin {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.9;
+            transform: scale(1.1);
+        }
+
+        /* 投币口高亮 */
+        .slot-highlight {
+            box-shadow: 0 0 15px #FFEB3B;
+            border-color: #FFEB3B;
+        }
+
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="btn-home">🏠</a>
+
+<header>
+    <h1>🪙 动物售货机</h1>
+    <div class="level-info" id="level-text">第 1 关</div>
+</header>
+
+<div class="inventory-bar" id="my-bag">
+    <div class="inventory-title">我的包包</div>
+    <div id="bag-items"></div>
+</div>
+
+<div class="machine-container">
+    <div class="machine-header">请投入正确的金额购买商品</div>
+    
+    <div class="display-window">
+        <div class="product-display-area" id="product-area">
+            <div class="product-emoji" id="target-emoji">🍦</div>
+            <div class="price-tag" id="target-price">2元 5角</div>
+        </div>
+    </div>
+    
+    <!-- 出货口 -->
+    <div class="pickup-slot" id="pickup-slot"></div>
+
+    <div class="control-area">
+        <!-- 投币口 -->
+        <div class="coin-slot-panel" id="drop-zone">
+            <div class="slot-label">投币口</div>
+            <div class="slot-hole"></div>
+            <div class="slot-label">INSERT COIN</div>
+        </div>
+
+        <!-- 显示屏 -->
+        <div class="lcd-screen">
+            <div class="lcd-label">已投金额</div>
+            <div class="lcd-value" id="current-money">0元 0角</div>
+        </div>
+    </div>
+</div>
+
+<div class="wallet-panel" id="wallet">
+    <div class="wallet-balance" id="total-balance">钱包: 20元 0角</div>
+    
+    <!-- 钱币源 -->
+    <div class="coin coin-1yuan" id="coin-10" data-val="10">
+        <span>1</span><small>元</small>
+        <div class="coin-count" id="count-10">10</div>
+    </div>
+    <div class="coin coin-5jiao" id="coin-5" data-val="5">
+        <span>5</span><small>角</small>
+        <div class="coin-count" id="count-5">10</div>
+    </div>
+    <div class="coin coin-1jiao" id="coin-1" data-val="1">
+        <span>1</span><small>角</small>
+        <div class="coin-count" id="count-1">20</div>
+    </div>
+</div>
+
+<div class="feedback-overlay" id="feedback-modal">
+    <div class="feedback-box">
+        <div class="feedback-emoji" id="fb-emoji">🎉</div>
+        <div class="feedback-text" id="fb-text">购买成功！</div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 🔊 音效管理
+    // ==========================================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    const Sounds = {
+        click: () => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        },
+        insert: () => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const t = audioCtx.currentTime;
+            
+            // 主音：高频金属撞击
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(2000, t);
+            osc1.frequency.exponentialRampToValueAtTime(1000, t + 0.1);
+            gain1.gain.setValueAtTime(0.1, t);
+            gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+            
+            // 辅音：产生金属颤音 (拍频)
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(2200, t); // 稍微错开频率
+            osc2.frequency.exponentialRampToValueAtTime(1200, t + 0.1);
+            gain2.gain.setValueAtTime(0.05, t);
+            gain2.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            gain1.connect(audioCtx.destination);
+            gain2.connect(audioCtx.destination);
+            
+            osc1.start(t);
+            osc1.stop(t + 0.2);
+            osc2.start(t);
+            osc2.stop(t + 0.2);
+        },
+        clunk: () => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            // 模拟重物掉落的低音
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        },
+        success: () => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            // 简单的胜利旋律 C-E-G-C
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime + i*0.15);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + i*0.15 + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + i*0.15);
+                osc.stop(audioCtx.currentTime + i*0.15 + 0.2);
+            });
+        }
+    };
+
+    // ==========================================
+    // 数据配置
+    // ==========================================
+    const PRODUCTS = [
+        // 简单整5/整10
+        { icon: '🍬', name: '糖果', price: 5 }, 
+        { icon: '🍭', name: '棒棒糖', price: 15 },
+        { icon: '🍫', name: '巧克力', price: 20 },
+        { icon: '🍪', name: '饼干', price: 25 },
+        { icon: '🍦', name: '冰淇淋', price: 30 },
+        { icon: '🍩', name: '甜甜圈', price: 35 },
+        { icon: '🧃', name: '果汁', price: 40 },
+        { icon: '🧸', name: '小熊', price: 50 },
+        // 新增：有零有整
+        { icon: '✏️', name: '铅笔', price: 8 }, // 8角
+        { icon: '📏', name: '尺子', price: 12 }, // 1元2角
+        { icon: '✂️', name: '剪刀', price: 36 }, // 3元6角
+        { icon: '📓', name: '笔记本', price: 28 }, // 2元8角
+        { icon: '🖌️', name: '画笔', price: 16 }, // 1元6角
+        { icon: '🚗', name: '玩具车', price: 88 }, // 8元8角
+        { icon: '🎨', name: '颜料', price: 65 }, // 6元5角
+        { icon: '🧢', name: '帽子', price: 42 }, // 4元2角
+    ];
+
+    // 游戏状态
+    let currentLevel = 1;
+    let currentTarget = null;
+    let currentInserted = 0; // 单位：角
+    
+    // 钱包库存 (单位：个)
+    let walletStock = {
+        10: 10, // 1元
+        5: 10,  // 5角
+        1: 20   // 1角
+    };
+
+    // 初始化
+    function initGame() {
+        updateWalletUI();
+        startLevel(currentLevel);
+        initDrag();
+    }
+
+    function startLevel(level) {
+        currentInserted = 0;
+        updateScreen();
+        
+        // 清理出货口
+        document.getElementById('pickup-slot').innerHTML = '';
+        // 显示商品展示区
+        document.getElementById('product-area').style.opacity = '1';
+
+        // 关卡逻辑
+        let candidates = [];
+        if (level <= 2) {
+            // 1-2关：整元 或 5角
+            candidates = PRODUCTS.filter(p => p.price % 5 === 0);
+        } else if (level <= 4) {
+            // 3-4关：稍微复杂，可以带小零头，价格较低
+            candidates = PRODUCTS.filter(p => p.price <= 40);
+        } else {
+            // 5关+：全随机
+            candidates = PRODUCTS;
+        }
+        
+        // 随机选一个
+        currentTarget = candidates[Math.floor(Math.random() * candidates.length)];
+        
+        // UI 更新
+        document.getElementById('level-text').innerText = `第 ${level} 关`;
+        document.getElementById('target-emoji').innerText = currentTarget.icon;
+        document.getElementById('target-price').innerText = formatPrice(currentTarget.price);
+    }
+
+    // 格式化价格 (角 -> 元角)
+    function formatPrice(jiao) {
+        const y = Math.floor(jiao / 10);
+        const j = jiao % 10;
+        if (j === 0) return `${y}元`;
+        if (y === 0) return `${j}角`;
+        return `${y}元 ${j}角`;
+    }
+
+    function updateWalletUI() {
+        // 更新硬币数量
+        document.getElementById('count-10').innerText = walletStock[10];
+        document.getElementById('count-5').innerText = walletStock[5];
+        document.getElementById('count-1').innerText = walletStock[1];
+
+        // 变灰处理
+        document.getElementById('coin-10').classList.toggle('disabled', walletStock[10] <= 0);
+        document.getElementById('coin-5').classList.toggle('disabled', walletStock[5] <= 0);
+        document.getElementById('coin-1').classList.toggle('disabled', walletStock[1] <= 0);
+
+        // 更新总余额
+        let totalVal = walletStock[10]*10 + walletStock[5]*5 + walletStock[1]*1;
+        document.getElementById('total-balance').innerText = `钱包: ${formatPrice(totalVal)}`;
+    }
+
+    function updateScreen() {
+        const display = document.getElementById('current-money');
+        display.innerText = currentInserted === 0 ? "0元 0角" : formatPrice(currentInserted);
+        
+        // 检查是否达成目标
+        if (currentTarget && currentInserted === currentTarget.price) {
+            handleSuccess();
+        } else if (currentTarget && currentInserted > currentTarget.price) {
+            handleOverpaid(); 
+        }
+    }
+
+    function handleSuccess() {
+        // 1. 商品掉落动画
+        const pickupSlot = document.getElementById('pickup-slot');
+        const item = document.createElement('div');
+        item.className = 'purchased-item';
+        item.innerText = currentTarget.icon;
+        pickupSlot.appendChild(item);
+        Sounds.clunk(); // 音效：掉落声
+        
+        // 隐藏展示区
+        document.getElementById('product-area').style.opacity = '0';
+        
+        // 2. 放入我的包包
+        addToBag(currentTarget.icon);
+        
+        // 3. 成功反馈
+        setTimeout(() => {
+            Sounds.success(); // 音效：胜利音乐
+            showFeedback(true, `买到了！<br>${currentTarget.name}`);
+            setTimeout(() => {
+                currentLevel++;
+                hideFeedback();
+                // 延迟一点开始下一关，让孩子看到空的出货口
+                setTimeout(() => startLevel(currentLevel), 500);
+            }, 2000);
+        }, 800); // 等掉落动画播完
+    }
+    
+    function addToBag(icon) {
+        const bag = document.getElementById('bag-items');
+        const div = document.createElement('div');
+        div.className = 'inventory-item';
+        div.innerText = icon;
+        // 新买的放在最上面
+        bag.prepend(div);
+    }
+
+    function handleOverpaid() {
+        const screen = document.querySelector('.lcd-screen');
+        screen.style.backgroundColor = '#B71C1C'; 
+        setTimeout(() => {
+            screen.style.backgroundColor = '';
+            
+            // 退款逻辑：简单退回
+            let refund = currentInserted;
+            while(refund >= 10) { walletStock[10]++; refund -= 10; }
+            while(refund >= 5) { walletStock[5]++; refund -= 5; }
+            while(refund >= 1) { walletStock[1]++; refund -= 1; }
+            updateWalletUI();
+
+            currentInserted = 0;
+            updateScreen();
+            showFeedback(false, "给太多啦！<br>钱退回来啦，再试一次");
+            setTimeout(hideFeedback, 1500);
+        }, 500);
+    }
+
+    function showFeedback(isSuccess, html) {
+        const modal = document.getElementById('feedback-modal');
+        const emoji = document.getElementById('fb-emoji');
+        const text = document.getElementById('fb-text');
+        
+        emoji.innerText = isSuccess ? currentTarget.icon : '😫';
+        text.innerHTML = html;
+        modal.classList.add('visible');
+    }
+
+    function hideFeedback() {
+        document.getElementById('feedback-modal').classList.remove('visible');
+    }
+
+    // ==========================================
+    // 拖拽交互
+    // ==========================================
+    function initDrag() {
+        const wallet = document.getElementById('wallet');
+        const dropZone = document.getElementById('drop-zone');
+        let dragEl = null;
+        let isDragging = false;
+        let coinValue = 0;
+
+        function startDrag(e) {
+            const target = e.target.closest('.coin');
+            if (!target) return;
+            
+            // 检查库存
+            const val = parseInt(target.dataset.val);
+            if (walletStock[val] <= 0) return; // 没有库存了
+
+            e.preventDefault();
+            isDragging = true;
+            Sounds.click(); // 音效：拿起硬币
+            coinValue = val;
+            
+            const point = e.touches ? e.touches[0] : e;
+            
+            dragEl = target.cloneNode(true);
+            const counter = dragEl.querySelector('.coin-count');
+            if(counter) counter.remove();
+
+            dragEl.className += ' dragging-coin';
+            dragEl.style.left = (point.clientX - 35) + 'px';
+            dragEl.style.top = (point.clientY - 35) + 'px';
+            document.body.appendChild(dragEl);
+            
+            moveDrag(point);
+        }
+
+        function moveDrag(point) {
+            if (!isDragging || !dragEl) return;
+            dragEl.style.left = (point.clientX - 35) + 'px';
+            dragEl.style.top = (point.clientY - 35) + 'px';
+
+            const elemBelow = document.elementFromPoint(point.clientX, point.clientY);
+            if (elemBelow && dropZone.contains(elemBelow)) {
+                dropZone.classList.add('slot-highlight');
+            } else {
+                dropZone.classList.remove('slot-highlight');
+            }
+        }
+
+        function endDrag(e) {
+            if (!isDragging || !dragEl) return;
+            
+            const point = e.changedTouches ? e.changedTouches[0] : e;
+            const elemBelow = document.elementFromPoint(point.clientX, point.clientY);
+            
+            if (elemBelow && dropZone.contains(elemBelow)) {
+                // 投币成功
+                playInsertAnimation();
+                Sounds.insert(); // 音效：硬币入孔
+                
+                // 扣除库存
+                walletStock[coinValue]--;
+                updateWalletUI();
+
+                // 增加已投金额
+                currentInserted += coinValue;
+                updateScreen();
+            }
+
+            document.body.removeChild(dragEl);
+            dragEl = null;
+            isDragging = false;
+            dropZone.classList.remove('slot-highlight');
+        }
+
+        function playInsertAnimation() {
+            const slot = document.querySelector('.slot-hole');
+            slot.style.transform = 'scaleY(0.8)';
+            setTimeout(() => slot.style.transform = 'scaleY(1)', 100);
+        }
+
+        wallet.addEventListener('mousedown', startDrag);
+        wallet.addEventListener('touchstart', startDrag, {passive: false});
+        
+        window.addEventListener('mousemove', e => isDragging && moveDrag(e));
+        window.addEventListener('touchmove', e => isDragging && moveDrag(e.touches[0]), {passive: false});
+        
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+    }
+
+    // Start
+    initGame();
+
+</script>
+</body>
+</html>
