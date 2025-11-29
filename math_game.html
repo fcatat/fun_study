@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>森林魔法集市 (无限随机版)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zcool+KuaiLe&display=swap');
+
+        :root {
+            --wood-color: #8D6E63;
+            --wood-dark: #5D4037;
+            --sky-blue: #B3E5FC;
+            --grass-green: #AED581;
+            --plate-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, var(--sky-blue) 0%, var(--sky-blue) 60%, var(--grass-green) 60%);
+            font-family: "Zcool KuaiLe", "Comic Sans MS", cursive, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+
+        header {
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            color: #333;
+            z-index: 10;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #E65100;
+            text-shadow: 2px 2px 0 #FFF;
+        }
+
+        .level-tag {
+            background: #FFF;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: #E65100;
+            font-size: 1.2rem;
+            margin-top: 5px;
+            display: inline-block;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.1);
+        }
+
+        #stage {
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sign-board {
+            background: #FFF8E1;
+            border: 4px solid var(--wood-color);
+            border-radius: 15px;
+            padding: 8px 15px;
+            margin-top: 5px;
+            position: relative;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .sign-board::before {
+            content: '📜 魔法公式';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--wood-color);
+            color: white;
+            padding: 0 10px;
+            font-size: 0.8rem;
+            border-radius: 10px;
+        }
+
+        .rule-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 2px;
+            flex-wrap: wrap;
+        }
+        
+        .equals { margin: 0 8px; color: var(--wood-dark); font-weight: bold; font-family: sans-serif; }
+
+        .balance-container {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            margin-top: auto;
+            margin-bottom: 10px;
+        }
+
+        .balance-base {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 90px;
+            background: var(--wood-dark);
+        }
+        
+        .balance-beam {
+            position: absolute;
+            top: 130px; 
+            left: 10%;
+            width: 80%;
+            height: 8px;
+            background: var(--wood-color);
+            border-radius: 5px;
+            transition: transform 0.5s cubic-bezier(0.4, 2.5, 0.55, 0.44); 
+            z-index: 10;
+        }
+
+        .plate-box {
+            position: absolute;
+            width: 110px;
+            height: 130px;
+            top: -130px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            transition: transform 0.5s ease; 
+        }
+
+        .plate-left { left: 0; }
+        .plate-right { right: 0; }
+
+        .rope { width: 2px; height: 50px; background: #333; }
+        
+        .plate {
+            width: 110px;
+            height: 60px;
+            background: var(--plate-bg);
+            border: 3px solid var(--wood-color);
+            border-radius: 10px 10px 50px 50px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-content: flex-end;
+            padding-bottom: 8px;
+            box-shadow: inset 0 -5px 10px rgba(0,0,0,0.1);
+        }
+
+        .plate.target { background: rgba(255, 240, 200, 0.9); }
+        .plate.answer { border-color: #4CAF50; border-style: dashed; }
+
+        .item {
+            width: 45px;
+            height: 45px;
+            font-size: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.1s;
+            z-index: 100;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .item:active { transform: scale(1.2); cursor: grabbing; }
+
+        .item.in-plate {
+            width: 32px;
+            height: 32px;
+            font-size: 24px;
+            margin: -3px;
+            animation: popIn 0.3s;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .control-panel {
+            background: #FFF;
+            width: 100%;
+            padding: 15px 0;
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 50;
+        }
+
+        .inventory {
+            display: flex;
+            gap: 20px;
+            padding: 10px;
+            background: #F1F8E9;
+            border-radius: 50px;
+            border: 2px solid #8BC34A;
+            min-height: 60px;
+            margin-bottom: 10px;
+            min-width: 80px;
+            justify-content: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            border: none;
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-family: inherit;
+            cursor: pointer;
+            color: white;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn-check { background: #4CAF50; }
+        .btn-reset { background: #FF7043; }
+
+        #msg-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        .msg-box {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-size: 1.8rem;
+            border: 5px solid #FFCA28;
+            transform: scale(0);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .msg-box.show { transform: scale(1); }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUp 1s forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(0); opacity: 0; }
+        }
+
+        .btn-home {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            border: 2px solid #E65100;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="btn-home">🏠</a>
+
+<header>
+    <h1>🧙‍♂️ 森林魔法集市 🎲</h1>
+    <div class="level-tag" id="level-txt">第 1 关</div>
+</header>
+
+<div id="stage">
+    <div class="sign-board" id="rules-area"></div>
+
+    <div class="balance-container">
+        <div class="balance-base"></div>
+        <div class="balance-beam" id="beam">
+            <div class="plate-box plate-left" id="plate-left-box">
+                <div class="rope"></div>
+                <div class="plate target" id="plate-target"></div>
+            </div>
+            <div class="plate-box plate-right" id="plate-right-box">
+                <div class="rope"></div>
+                <div class="plate answer" id="plate-answer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="control-panel">
+    <div class="inventory" id="inventory"></div>
+    <div class="btn-group">
+        <button class="btn btn-check" onclick="checkAnswer()">⚖️ 称一下</button>
+        <button class="btn btn-reset" onclick="resetLevel()">🔄 重来</button>
+    </div>
+</div>
+
+<div id="msg-overlay">
+    <div class="msg-box" id="msg-content"></div>
+</div>
+
+<script>
+    // ==========================================
+    // 核心逻辑：随机关卡生成器
+    // ==========================================
+
+    // 物品库：Emoji池
+    const EMOJI_POOL = [
+        '🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🌽','🥕','🧄','🧅','🥔',
+        '🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🥪','🥙','🧆','🌮','🌯','🥗','🥘','🍝','🍜','🍲',
+        '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛',
+        '⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷',
+        '🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍️','🛵','🦽','🦼','🛺','🚲','🛴','🛹','🛼','🚏','🛣️','🛤️','🛢️','⛽','🚨'
+    ];
+
+    // 洗牌算法
+    function shuffle(array) {
+        let currentIndex = array.length,  randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // 随机生成关卡数据
+    function generateLevelData(levelIndex) {
+        // 1. 随机选取 3 个不重复的 Emoji
+        const gameEmojis = shuffle([...EMOJI_POOL]).slice(0, 3);
+        const itemA = gameEmojis[0];
+        const itemB = gameEmojis[1];
+        const itemC = gameEmojis[2];
+
+        let rules = [];
+        let question = {};
+        let answerItem = '';
+        let targetCount = 0;
+        let desc = '';
+
+        // 难度分级逻辑
+        // Level 1-3: 简单 A -> B (1换2 或 1换3)
+        if (levelIndex < 3) {
+            const ratio = Math.floor(Math.random() * 2) + 2; // 2 或 3
+            rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio });
+            
+            question = { item: itemA, count: 1 };
+            answerItem = itemB;
+            targetCount = ratio;
+            desc = "神秘的交换";
+        }
+        // Level 4-7: 进阶 A -> B (数量变多，比如 2A -> ?B)
+        else if (levelIndex < 7) {
+            const ratio = Math.floor(Math.random() * 2) + 2; // 1A = 2B 或 3B
+            rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio });
+            
+            // 题目数量 2 或 3，但要保证总结果不超过 9，避免屏幕放不下
+            // if ratio is 3, question count max 3 (3*3=9)
+            // if ratio is 2, question count max 4 (2*4=8)
+            const maxQ = ratio === 3 ? 3 : 4;
+            const qCount = Math.floor(Math.random() * (maxQ - 2 + 1)) + 2; 
+
+            question = { item: itemA, count: qCount };
+            answerItem = itemB;
+            targetCount = qCount * ratio;
+            desc = "多多的订单";
+        }
+        // Level 8-10+: 挑战 A -> B -> C
+        else {
+            const ratio1 = 2; // 1A = 2B (固定为2，防止最终数量爆炸)
+            const ratio2 = Math.floor(Math.random() * 2) + 2; // 1B = 2C 或 3C
+            
+            rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio1 });
+            rules.push({ src: itemB, count: 1, tgt: itemC, tgtCount: ratio2 });
+            
+            question = { item: itemA, count: 1 };
+            answerItem = itemC;
+            targetCount = 1 * ratio1 * ratio2; // 1 * 2 * (2or3) = 4 或 6
+            desc = "魔法大变身";
+        }
+
+        return {
+            id: levelIndex + 1,
+            desc: desc,
+            rules: rules,
+            question: question,
+            answerItem: answerItem,
+            targetCount: targetCount
+        };
+    }
+
+    // ==========================================
+    // 游戏状态管理
+    // ==========================================
+    
+    let currentLevelIndex = 0;
+    let currentLevelData = null;
+    let currentItems = []; 
+
+    function initGame() {
+        startLevel(currentLevelIndex);
+        initTouchDrag(); 
+    }
+
+    function startLevel(idx) {
+        // 动态生成关卡数据
+        currentLevelData = generateLevelData(idx);
+        
+        // UI 更新
+        document.getElementById('level-txt').innerText = `第 ${idx + 1} 关: ${currentLevelData.desc}`;
+        
+        // 渲染规则
+        const ruleArea = document.getElementById('rules-area');
+        ruleArea.innerHTML = '';
+        currentLevelData.rules.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'rule-row';
+            let left = r.src.repeat(r.count);
+            let right = r.tgt.repeat(r.tgtCount);
+            div.innerHTML = `${left} <span class="equals">=</span> ${right}`;
+            ruleArea.appendChild(div);
+        });
+
+        // 渲染左盘 (题目)
+        const plateLeft = document.getElementById('plate-target');
+        plateLeft.innerHTML = '';
+        for(let i=0; i<currentLevelData.question.count; i++) {
+            plateLeft.innerHTML += `<div class="item in-plate">${currentLevelData.question.item}</div>`;
+        }
+
+        // 渲染底部物品源
+        const inventory = document.getElementById('inventory');
+        inventory.innerHTML = '';
+        const sourceItem = document.createElement('div');
+        sourceItem.className = 'item';
+        sourceItem.innerText = currentLevelData.answerItem;
+        sourceItem.setAttribute('data-type', currentLevelData.answerItem);
+        sourceItem.id = 'source-drag-item'; 
+        inventory.appendChild(sourceItem);
+
+        // 重置状态
+        currentItems = [];
+        renderRightPlate();
+        updateBalanceVisual(-15); // 初始状态：左重
+    }
+
+    function renderRightPlate() {
+        const plateRight = document.getElementById('plate-answer');
+        plateRight.innerHTML = '';
+        currentItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'item in-plate';
+            div.innerText = item;
+            div.onclick = () => {
+                currentItems.splice(index, 1);
+                renderRightPlate();
+                simulateWeight(); 
+            };
+            plateRight.appendChild(div);
+        });
+    }
+
+    function simulateWeight() {
+        let targetCount = currentLevelData.targetCount;
+        let currentCount = currentItems.length;
+        
+        let diff = currentCount - targetCount;
+        let angle = diff * 5; 
+        angle = Math.max(-15, Math.min(15, angle));
+        
+        if(currentCount === 0) angle = -15;
+
+        updateBalanceVisual(angle);
+    }
+
+    function updateBalanceVisual(angle) {
+        const beam = document.getElementById('beam');
+        const leftBox = document.getElementById('plate-left-box');
+        const rightBox = document.getElementById('plate-right-box');
+
+        beam.style.transform = `rotate(${angle}deg)`;
+        leftBox.style.transform = `rotate(${-angle}deg)`;
+        rightBox.style.transform = `rotate(${-angle}deg)`;
+    }
+
+    function checkAnswer() {
+        const targetCount = currentLevelData.targetCount;
+        const currentCount = currentItems.length;
+
+        if(currentCount === targetCount) {
+            updateBalanceVisual(0); 
+            showMsg("⚖️ 平衡啦！答对了！", true);
+        } else {
+            let angle = currentCount < targetCount ? -15 : 15;
+            updateBalanceVisual(angle);
+            let hint = currentCount < targetCount ? "右边太轻啦！" : "右边太重啦！";
+            showMsg(hint, false);
+        }
+    }
+
+    function resetLevel() {
+        currentItems = [];
+        renderRightPlate();
+        updateBalanceVisual(-15);
+    }
+
+    function showMsg(text, isSuccess) {
+        const overlay = document.getElementById('msg-overlay');
+        const box = document.getElementById('msg-content');
+        box.innerText = text;
+        box.className = 'msg-box show';
+        
+        if(isSuccess) {
+            // 庆祝特效
+            for(let i=0; i<10; i++) {
+                setTimeout(() => createParticles(window.innerWidth/2 + (Math.random()-0.5)*300, window.innerHeight/2), i*100);
+            }
+            setTimeout(() => {
+                box.className = 'msg-box';
+                nextLevel();
+            }, 2000);
+        } else {
+            setTimeout(() => {
+                box.className = 'msg-box';
+            }, 1500);
+        }
+    }
+
+    function nextLevel() {
+        currentLevelIndex++;
+        // 无限关卡，不设上限，但难度会在10关后保持在最高级
+        startLevel(currentLevelIndex);
+    }
+
+    // ==========================================
+    // 交互逻辑
+    // ==========================================
+
+    function initTouchDrag() {
+        const source = document.getElementById('inventory');
+        const dropZone = document.getElementById('plate-answer');
+        let dragEl = null; 
+        let isDragging = false;
+
+        function startDrag(e) {
+            const target = e.target;
+            if (!target.classList.contains('item') || target.parentElement !== source) return;
+            e.preventDefault(); 
+            isDragging = true;
+            const point = e.touches ? e.touches[0] : e;
+            
+            dragEl = target.cloneNode(true);
+            dragEl.style.position = 'fixed';
+            dragEl.style.zIndex = 999;
+            dragEl.style.opacity = 0.8;
+            dragEl.style.width = '70px'; 
+            dragEl.style.height = '70px';
+            dragEl.style.pointerEvents = 'none'; 
+            
+            document.body.appendChild(dragEl);
+            moveDrag(point);
+        }
+
+        function moveDrag(point) {
+            if(!isDragging || !dragEl) return;
+            dragEl.style.left = (point.clientX - 35) + 'px';
+            dragEl.style.top = (point.clientY - 35) + 'px';
+
+            const elemBelow = document.elementFromPoint(point.clientX, point.clientY);
+            if(elemBelow && (elemBelow === dropZone || dropZone.contains(elemBelow))) {
+                dropZone.style.backgroundColor = 'rgba(174, 213, 129, 0.5)';
+            } else {
+                dropZone.style.backgroundColor = '';
+            }
+        }
+
+        function endDrag(e) {
+            if(!isDragging || !dragEl) return;
+            const point = e.changedTouches ? e.changedTouches[0] : e;
+            const elemBelow = document.elementFromPoint(point.clientX, point.clientY);
+            
+            if(elemBelow && (elemBelow === dropZone || dropZone.contains(elemBelow))) {
+                const type = dragEl.getAttribute('data-type');
+                currentItems.push(type);
+                renderRightPlate();
+                createParticles(point.clientX, point.clientY);
+                simulateWeight();
+            }
+
+            document.body.removeChild(dragEl);
+            dragEl = null;
+            isDragging = false;
+            dropZone.style.backgroundColor = ''; 
+        }
+
+        source.addEventListener('mousedown', startDrag);
+        source.addEventListener('touchstart', startDrag, {passive: false});
+        window.addEventListener('mousemove', e => isDragging && moveDrag(e));
+        window.addEventListener('touchmove', e => isDragging && moveDrag(e.touches[0]), {passive: false});
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+    }
+
+    function createParticles(x, y) {
+        for(let i=0; i<8; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.innerText = ['✨','🌟','💫','🎉'][Math.floor(Math.random()*4)];
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
+            p.style.fontSize = Math.random() * 20 + 15 + 'px';
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 80;
+            const tx = Math.cos(angle) * dist;
+            const ty = Math.sin(angle) * dist - 60; 
+            
+            p.animate([
+                { transform: `translate(0, 0) scale(1)`, opacity: 1 },
+                { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+            ], {
+                duration: 800,
+                easing: 'ease-out'
+            }).onfinish = () => p.remove();
+            
+            document.body.appendChild(p);
+        }
+    }
+
+    // 启动
+    initGame();
+
+</script>
+</body>
+</html>
