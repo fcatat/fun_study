@@ -455,6 +455,23 @@
         loadUser();
         renderSidebar();
         renderApps(0);
+        fixIOSLinks(); // 修复 iOS 跳转
+    }
+
+    // --- 修复 iOS Web App 链接跳转 ---
+    function fixIOSLinks() {
+        if(("standalone" in window.navigator) && window.navigator.standalone){
+            var c = document.querySelectorAll("a");
+            for(var i=0;i<c.length;i++){
+                c[i].addEventListener("click", function(event){
+                    var attr = this.getAttribute("href");
+                    if(attr && attr !== "#"){
+                        event.preventDefault();
+                        window.location = attr;
+                    }
+                },false);
+            }
+        }
     }
 
     // --- 用户名逻辑 ---

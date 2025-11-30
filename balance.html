@@ -20,7 +20,8 @@
             padding: 0;
             background: linear-gradient(to bottom, var(--sky-blue) 0%, var(--sky-blue) 60%, var(--grass-green) 60%);
             font-family: "Zcool KuaiLe", "Comic Sans MS", cursive, sans-serif;
-            height: 100vh;
+            height: 100vh; /* Fallback */
+            height: 100dvh; /* 动态视口高度，解决移动端地址栏遮挡问题 */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -63,6 +64,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center; /* 垂直居中 */
         }
 
         .sign-board {
@@ -198,7 +200,8 @@
         .control-panel {
             background: #FFF;
             width: 100%;
-            padding: 15px 0;
+            padding: 15px 0 30px 0; /* 增加底部 padding 适配 Home 条 */
+            padding-bottom: env(safe-area-inset-bottom, 20px); /* 适配 iPhone/iPad 底部安全区 */
             border-radius: 30px 30px 0 0;
             box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
             display: flex;
@@ -206,6 +209,7 @@
             align-items: center;
             position: relative;
             z-index: 50;
+            flex-shrink: 0; /* 防止被压缩 */
         }
 
         .inventory {
