@@ -544,29 +544,35 @@
         sourceItem.id = 'source-drag-item'; 
         inventory.appendChild(sourceItem);
 
-        // 重置状态
-        currentItems = [];
-        renderRightPlate();
-        updateBalanceVisual(-15); // 初始状态：左重
-    }
+    // 重置状态
+    currentItems = [];
+    renderRightPlate();
+    resetVisual(); // 初始状态：水平不动（隐藏答案）
+}
 
-    function renderRightPlate() {
+function renderRightPlate() {
         const plateRight = document.getElementById('plate-answer');
         plateRight.innerHTML = '';
         currentItems.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'item in-plate';
             div.innerText = item;
-            div.onclick = () => {
-                currentItems.splice(index, 1);
-                renderRightPlate();
-                simulateWeight(); 
-            };
-            plateRight.appendChild(div);
-        });
-    }
+        div.onclick = () => {
+            currentItems.splice(index, 1);
+            renderRightPlate();
+            resetVisual(); // 移除物品后重置状态，不实时显示重量
+        };
+        plateRight.appendChild(div);
+    });
+}
 
-    function simulateWeight() {
+// 新增：仅重置视觉，不计算重量
+function resetVisual() {
+    updateBalanceVisual(0); // 保持水平，不给提示
+    // 或者 updateBalanceVisual(-15); // 如果想模拟一开始左边重也可以，但建议水平更公平
+}
+
+function simulateWeight() {
         let targetCount = currentLevelData.targetCount;
         let currentCount = currentItems.length;
         
@@ -589,28 +595,30 @@
         rightBox.style.transform = `rotate(${-angle}deg)`;
     }
 
-    function checkAnswer() {
-        const targetCount = currentLevelData.targetCount;
-        const currentCount = currentItems.length;
+function checkAnswer() {
+    const targetCount = currentLevelData.targetCount;
+    const currentCount = currentItems.length;
 
-        if(currentCount === targetCount) {
-            updateBalanceVisual(0); 
-            showMsg("⚖️ 平衡啦！答对了！", true);
-            Sounds.success(); // 音效：成功
-        } else {
-            let angle = currentCount < targetCount ? -15 : 15;
-            updateBalanceVisual(angle);
-            let hint = currentCount < targetCount ? "右边太轻啦！" : "右边太重啦！";
-            showMsg(hint, false);
-            Sounds.error(); // 音效：错误
-        }
-    }
+    // 只有点击按钮时才显示真正的重量倾向
+    simulateWeight();
 
-    function resetLevel() {
-        currentItems = [];
-        renderRightPlate();
-        updateBalanceVisual(-15);
+    if(currentCount === targetCount) {
+        // simulateWeight 已经把角度设为 0 了
+        showMsg("⚖️ 平衡啦！答对了！", true);
+        Sounds.success(); // 音效：成功
+    } else {
+        // simulateWeight 已经设置了倾斜角度
+        let hint = currentCount < targetCount ? "右边太轻啦！" : "右边太重啦！";
+        showMsg(hint, false);
+        Sounds.error(); // 音效：错误
     }
+}
+
+function resetLevel() {
+    currentItems = [];
+    renderRightPlate();
+    resetVisual();
+}
 
     function showMsg(text, isSuccess) {
         const overlay = document.getElementById('msg-overlay');
@@ -688,14 +696,14 @@
             const point = e.changedTouches ? e.changedTouches[0] : e;
             const elemBelow = document.elementFromPoint(point.clientX, point.clientY);
             
-            if(elemBelow && (elemBelow === dropZone || dropZone.contains(elemBelow))) {
-                const type = dragEl.getAttribute('data-type');
-                currentItems.push(type);
-                renderRightPlate();
-                createParticles(point.clientX, point.clientY);
-                simulateWeight();
-                Sounds.drop(); // 音效：放下
-            }
+    if(elemBelow && (elemBelow === dropZone || dropZone.contains(elemBelow))) {
+        const type = dragEl.getAttribute('data-type');
+        currentItems.push(type);
+        renderRightPlate();
+        createParticles(point.clientX, point.clientY);
+        resetVisual(); // 放置物品后重置状态，不实时显示重量
+        Sounds.drop(); // 音效：放下
+    }
 
             document.body.removeChild(dragEl);
             dragEl = null;
