@@ -433,10 +433,12 @@
     // 随机生成关卡数据
     function generateLevelData(levelIndex) {
         // 1. 随机选取 3 个不重复的 Emoji
-        const gameEmojis = shuffle([...EMOJI_POOL]).slice(0, 3);
+        const needCount = levelIndex >= 11 ? 4 : 3;
+        const gameEmojis = shuffle([...EMOJI_POOL]).slice(0, needCount);
         const itemA = gameEmojis[0];
         const itemB = gameEmojis[1];
         const itemC = gameEmojis[2];
+        const itemD = gameEmojis[3] || null;
 
         let rules = [];
         let question = {};
@@ -445,44 +447,73 @@
         let desc = '';
 
         // 难度分级逻辑
-        // Level 1-3: 简单 A -> B (1换2 或 1换3)
+        
+        // Level 1-3: 简单 A -> B (1A = 2~4B)
         if (levelIndex < 3) {
-            const ratio = Math.floor(Math.random() * 2) + 2; // 2 或 3
+            const ratio = Math.floor(Math.random() * 3) + 2; // 2, 3, 4
             rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio });
             
-            question = { item: itemA, count: 1 };
-            answerItem = itemB;
-            targetCount = ratio;
-            desc = "神秘的交换";
-        }
-        // Level 4-7: 进阶 A -> B (数量变多，比如 2A -> ?B)
-        else if (levelIndex < 7) {
-            const ratio = Math.floor(Math.random() * 2) + 2; // 1A = 2B 或 3B
-            rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio });
-            
-            // 题目数量 2 或 3，但要保证总结果不超过 9，避免屏幕放不下
-            // if ratio is 3, question count max 3 (3*3=9)
-            // if ratio is 2, question count max 4 (2*4=8)
-            const maxQ = ratio === 3 ? 3 : 4;
-            const qCount = Math.floor(Math.random() * (maxQ - 2 + 1)) + 2; 
-
+            // 问题：1~3个A
+            const qCount = Math.floor(Math.random() * 3) + 1; 
             question = { item: itemA, count: qCount };
             answerItem = itemB;
             targetCount = qCount * ratio;
-            desc = "多多的订单";
+            desc = "神秘的交换";
         }
-        // Level 8-10+: 挑战 A -> B -> C
-        else {
-            const ratio1 = 2; // 1A = 2B (固定为2，防止最终数量爆炸)
+        // Level 4-7: 进阶 (引入 2A=3B 或 问题数量增多)
+        else if (levelIndex < 7) {
+            // 50% 概率出现 2A = 3B/4B，50% 概率出现 1A = NB 但问题问很多个
+            if (Math.random() > 0.5) {
+                const ratioB = Math.floor(Math.random() * 2) + 3; // 3 or 4
+                rules.push({ src: itemA, count: 2, tgt: itemB, tgtCount: ratioB });
+                
+                // 问题：必须是2的倍数，方便整除 (2, 4个)
+                const qCount = (Math.floor(Math.random() * 2) + 1) * 2;
+                question = { item: itemA, count: qCount };
+                answerItem = itemB;
+                targetCount = (qCount / 2) * ratioB;
+                desc = "复杂的订单";
+            } else {
+                const ratio = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio });
+                
+                // 问题：4~6个
+                const qCount = Math.floor(Math.random() * 3) + 4;
+                question = { item: itemA, count: qCount };
+                answerItem = itemB;
+                targetCount = qCount * ratio;
+                desc = "多多的订单";
+            }
+        }
+        // Level 8-11: 挑战二级换算 (A->B->C)
+        else if (levelIndex < 11) {
+            const ratio1 = 2; // 1A = 2B
             const ratio2 = Math.floor(Math.random() * 2) + 2; // 1B = 2C 或 3C
             
             rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio1 });
             rules.push({ src: itemB, count: 1, tgt: itemC, tgtCount: ratio2 });
             
-            question = { item: itemA, count: 1 };
+            const qCount = Math.floor(Math.random() * 2) + 1; // 1 或 2 个 A
+            question = { item: itemA, count: qCount };
             answerItem = itemC;
-            targetCount = 1 * ratio1 * ratio2; // 1 * 2 * (2or3) = 4 或 6
+            targetCount = qCount * ratio1 * ratio2;
             desc = "魔法大变身";
+        }
+        // Level 12+: 挑战三级换算 (A->B->C->D)
+        else {
+            const ratio1 = 2; // 1A = 2B
+            const ratio2 = Math.floor(Math.random() * 2) + 2; // 1B = 2C 或 3C
+            const ratio3 = Math.floor(Math.random() * 3) + 1; // 1C = 1~3D
+            
+            rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio1 });
+            rules.push({ src: itemB, count: 1, tgt: itemC, tgtCount: ratio2 });
+            rules.push({ src: itemC, count: 1, tgt: itemD, tgtCount: ratio3 });
+            
+            const qCount = Math.floor(Math.random() * 2) + 1; // 1 或 2 个 A
+            question = { item: itemA, count: qCount };
+            answerItem = itemD || itemC; // 理论上 itemD 必定存在
+            targetCount = qCount * ratio1 * ratio2 * ratio3;
+            desc = "终极链式魔法";
         }
 
         return {
