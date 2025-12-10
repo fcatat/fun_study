@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>书包整理小助手</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zcool+KuaiLe&display=swap');
+
+        :root {
+            --sky: #C7E8FF;
+            --leaf: #B5E48C;
+            --sun: #FFD166;
+            --navy: #264653;
+            --soft: #FAFBFD;
+            --card: rgba(255, 255, 255, 0.92);
+            --shadow: rgba(0, 0, 0, 0.12);
+            --accent: #4ECDC4;
+            --pink: #FF99C8;
+            --orange: #FB8500;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Zcool KuaiLe", "Comic Sans MS", cursive, sans-serif;
+            background: linear-gradient(180deg, var(--sky) 0%, var(--soft) 55%, var(--leaf) 100%);
+            color: var(--navy);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .bunting {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 50px;
+            display: flex;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .bunting span {
+            flex: 1;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            opacity: 0.8;
+        }
+        .bunting span:nth-child(1) { background: var(--sun); }
+        .bunting span:nth-child(2) { background: var(--accent); }
+        .bunting span:nth-child(3) { background: var(--pink); }
+        .bunting span:nth-child(4) { background: var(--orange); }
+        .bunting span:nth-child(5) { background: #7DD3FC; }
+
+        .btn-home {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: white;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 12px var(--shadow);
+            color: var(--navy);
+            text-decoration: none;
+            font-size: 1.4rem;
+            z-index: 15;
+        }
+
+        header {
+            margin-top: 70px;
+            text-align: center;
+            padding: 0 20px 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            color: var(--orange);
+            text-shadow: 0 2px white;
+        }
+
+        .subtitle {
+            margin-top: 6px;
+            font-size: 1.1rem;
+            color: var(--navy);
+        }
+
+        .dashboard {
+            width: min(1100px, 94%);
+            background: var(--card);
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 15px 30px var(--shadow);
+            margin-bottom: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 25px;
+        }
+
+        .info-panel {
+            background: #fff;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.7), 0 10px 25px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .stars {
+            display: flex;
+            gap: 6px;
+        }
+        .stars span {
+            font-size: 1.5rem;
+            filter: grayscale(1);
+            opacity: 0.4;
+            transition: 0.3s;
+        }
+        .stars span.active { filter: none; opacity: 1; }
+
+        .buddy-card {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            background: rgba(199, 232, 255, 0.5);
+            border-radius: 20px;
+            padding: 15px;
+            border: 2px dashed rgba(38, 70, 83, 0.2);
+        }
+        .buddy-emoji {
+            font-size: 3.5rem;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 0 4px rgba(255, 209, 102, 0.7);
+        }
+        .buddy-info h2 { margin: 0; font-size: 1.5rem; color: var(--orange); }
+        .buddy-info p { margin: 6px 0 0; font-size: 1.05rem; }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 16px;
+            background: rgba(78,205,196,0.15);
+            color: var(--navy);
+            font-weight: bold;
+            width: fit-content;
+        }
+
+        .week-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        .day-card {
+            background: rgba(233, 249, 255, 0.9);
+            border-radius: 14px;
+            padding: 10px;
+            border: 2px solid transparent;
+            min-height: 90px;
+        }
+        .day-card strong { display: inline-block; margin-bottom: 6px; }
+        .day-card.highlight { border-color: var(--accent); box-shadow: 0 5px 12px var(--shadow); }
+        .lesson-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: white;
+            margin: 2px;
+            font-size: 0.95rem;
+        }
+
+        .note-list {
+            margin: 0;
+            padding-left: 18px;
+            color: rgba(38,70,83,0.85);
+        }
+
+        .missions {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .mission {
+            background: #fff;
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 10px 20px var(--shadow);
+            border: 3px solid transparent;
+        }
+        .mission h3 { margin: 0 0 10px; font-size: 1.4rem; color: var(--navy); }
+        .instruction { margin-bottom: 12px; color: rgba(38, 70, 83, 0.8); }
+
+        .items-bank, .bag-zone {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .chip {
+            padding: 8px 12px;
+            border-radius: 18px;
+            border: 2px solid rgba(38, 70, 83, 0.2);
+            background: rgba(199, 232, 255, 0.6);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.2s;
+        }
+        .chip span { font-size: 1.4rem; }
+        .chip.in-bag {
+            background: rgba(255, 209, 102, 0.6);
+            border-color: var(--orange);
+            transform: scale(1.05);
+        }
+
+        .bag {
+            min-height: 90px;
+            padding: 12px;
+            border: 2px dashed rgba(38, 70, 83, 0.4);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        button {
+            font-family: inherit;
+            font-size: 1rem;
+            padding: 10px 18px;
+            border-radius: 20px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s;
+        }
+        button:active { transform: translateY(2px); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(38, 70, 83, 0.95);
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 25px;
+            font-size: 1.05rem;
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            z-index: 50;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 16px;
+            background: rgba(78, 205, 196, 0.2);
+            font-size: 0.95rem;
+        }
+
+        .next-wrapper { display: flex; justify-content: flex-end; margin-top: 8px; gap: 10px; }
+
+        @media (max-width: 980px) { .dashboard { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .dashboard { padding: 18px; } }
+    </style>
+</head>
+<body>
+    <div class="bunting">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <a class="btn-home" href="index.html">🏠</a>
+    <header>
+        <h1>书包整理小助手 🎒</h1>
+        <p class="subtitle">看好明日课表、帮小伙伴把书本和必备物品装好！</p>
+    </header>
+
+    <section class="dashboard">
+        <div class="info-panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="pill">勇气星星
+                    <span class="stars" id="stars">
+                        <span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span>
+                    </span>
+                </div>
+                <div class="pill" id="tomorrowTag">明天：周二</div>
+            </div>
+            <div class="buddy-card">
+                <div class="buddy-emoji" id="buddyEmoji">🦊</div>
+                <div class="buddy-info">
+                    <h2 id="buddyName">木木小狐狸</h2>
+                    <p id="buddyWorry">“帮我检查一下书包好吗？”</p>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin:4px 0 6px;">周课程表</h3>
+                <div class="week-table" id="weekTable"></div>
+            </div>
+
+            <div>
+                <h3 style="margin:4px 0 6px;">提醒事项</h3>
+                <ul class="note-list" id="remindList"></ul>
+            </div>
+        </div>
+
+        <div class="missions">
+            <div class="mission">
+                <h3>任务 · 收拾书包</h3>
+                <p class="instruction">根据明日课表和提醒，把需要的书本与物品点到书包里。</p>
+
+                <div>
+                    <strong>明日课表：</strong>
+                    <div class="tag-row" id="tomorrowSubjects"></div>
+                </div>
+                <div style="margin-top:10px;">
+                    <strong>物品库：</strong>
+                    <div class="items-bank" id="itemsBank"></div>
+                </div>
+                <p style="margin:12px 0 6px;">📦 我的书包</p>
+                <div class="bag bag-zone" id="bagZone"></div>
+
+                <div class="next-wrapper">
+                    <button id="reshuffle">换一份课表</button>
+                    <button id="checkPack">检查书包</button>
+                </div>
+            </div>
+
+            <div class="mission">
+                <h3>准备好下一位伙伴了吗？</h3>
+                <div class="next-wrapper">
+                    <button id="nextBuddy" disabled>下一位伙伴 ➜</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="toast" id="toast">太棒啦！</div>
+
+    <script>
+        const buddies = [
+            { name: "木木小狐狸", emoji: "🦊", worry: "我怕书包忘带书，明天要帮我检查哦！" },
+            { name: "团团小熊猫", emoji: "🐼", worry: "课多的时候我会紧张，帮我收好书吧。" },
+            { name: "咔嚓小恐龙", emoji: "🦕", worry: "我总忘记带卡片和书，求提醒！" },
+            { name: "波波小海豚", emoji: "🐬", worry: "我想快点收好书包，这样就能安心睡觉。" }
+        ];
+
+        const subjects = [
+            { id: "chinese", name: "语文", emoji: "📕", item: "book_chinese" },
+            { id: "math", name: "数学", emoji: "📘", item: "book_math" },
+            { id: "english", name: "英语", emoji: "📙", item: "book_english" },
+            { id: "moral", name: "道德与法治", emoji: "📗", item: "book_moral" },
+            { id: "pe", name: "体育", emoji: "🤸", item: null },
+            { id: "music", name: "音乐", emoji: "🎵", item: "book_music" },
+            { id: "art", name: "美术", emoji: "🎨", item: "book_art" },
+            { id: "science", name: "科学", emoji: "🔬", item: "book_science" },
+            { id: "labor", name: "劳动与技术", emoji: "🧰", item: "book_labor" }
+        ];
+
+        const items = [
+            { id: "book_chinese", label: "语文书", emoji: "📕" },
+            { id: "book_math", label: "数学书", emoji: "📘" },
+            { id: "book_english", label: "英语书", emoji: "📙" },
+            { id: "book_moral", label: "道法书", emoji: "📗" },
+            { id: "book_music", label: "音乐书", emoji: "🎵" },
+            { id: "book_art", label: "美术本", emoji: "🖌️" },
+            { id: "book_science", label: "科学书", emoji: "🔬" },
+            { id: "book_labor", label: "劳技本", emoji: "🧰" },
+            { id: "water", label: "水杯", emoji: "🚰" },
+            { id: "mask", label: "口罩", emoji: "😷" },
+            { id: "sport_uniform", label: "运动服", emoji: "👕" },
+            { id: "art_kit", label: "美术材料包", emoji: "🎒" },
+            { id: "science_kit", label: "观察包", emoji: "🧪" },
+            { id: "class_badge", label: "班徽", emoji: "🎖️" },
+            { id: "labor_gloves", label: "劳动手套", emoji: "🧤" }
+        ];
+
+        const specialRequirements = [
+            { text: "明天要穿黄色运动服", itemId: "sport_uniform" },
+            { text: "美术课要带材料包", itemId: "art_kit" },
+            { text: "科学课做实验，带观察包", itemId: "science_kit" },
+            { text: "班会要带班徽", itemId: "class_badge" },
+            { text: "劳动课要戴手套", itemId: "labor_gloves" }
+        ];
+
+        const weekDays = ["周一", "周二", "周三", "周四", "周五"];
+        const buddyEmojiEl = document.getElementById('buddyEmoji');
+        const buddyNameEl = document.getElementById('buddyName');
+        const buddyWorryEl = document.getElementById('buddyWorry');
+        const itemsBank = document.getElementById('itemsBank');
+        const bagZone = document.getElementById('bagZone');
+        const checkPackBtn = document.getElementById('checkPack');
+        const nextBuddyBtn = document.getElementById('nextBuddy');
+        const reshuffleBtn = document.getElementById('reshuffle');
+        const toast = document.getElementById('toast');
+        const starsEl = document.getElementById('stars').children;
+        const weekTable = document.getElementById('weekTable');
+        const tomorrowTag = document.getElementById('tomorrowTag');
+        const tomorrowSubjectsEl = document.getElementById('tomorrowSubjects');
+        const remindList = document.getElementById('remindList');
+
+        let starCount = 0;
+        let currentBuddy = null;
+        let weekSchedule = [];
+        let tomorrowIndex = 0;
+        let tomorrowSubjects = [];
+        let currentSpecials = [];
+        let audioCtx;
+
+        function playChime(success = true) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain).connect(audioCtx.destination);
+                osc.type = 'triangle';
+                osc.frequency.value = success ? 820 : 320;
+                gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.38);
+            } catch (e) {}
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1500);
+        }
+
+        function updateStars() {
+            Array.from(starsEl).forEach((star, idx) => {
+                star.classList.toggle('active', idx < starCount);
+            });
+        }
+
+        function pickBuddy() {
+            return buddies[Math.floor(Math.random() * buddies.length)];
+        }
+
+        function sample(array, n) {
+            const clone = [...array];
+            for (let i = clone.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [clone[i], clone[j]] = [clone[j], clone[i]];
+            }
+            return clone.slice(0, n);
+        }
+
+        function generateWeek() {
+            weekSchedule = weekDays.map(() => sample(subjects, 5));
+            tomorrowIndex = Math.floor(Math.random() * weekDays.length);
+            tomorrowSubjects = weekSchedule[tomorrowIndex];
+            currentSpecials = sample(specialRequirements, 1 + Math.floor(Math.random() * 2)); // 1-2 个随机要求
+            renderWeek();
+            renderTomorrow();
+            renderReminders();
+            renderItems();
+            bagZone.innerHTML = '';
+            nextBuddyBtn.disabled = true;
+        }
+
+        function renderWeek() {
+            weekTable.innerHTML = '';
+            weekSchedule.forEach((dayList, idx) => {
+                const card = document.createElement('div');
+                card.className = 'day-card' + (idx === tomorrowIndex ? ' highlight' : '');
+                card.innerHTML = `<strong>${weekDays[idx]}</strong>`;
+                dayList.forEach(s => {
+                    const chip = document.createElement('div');
+                    chip.className = 'lesson-chip';
+                    chip.innerHTML = `<span>${s.emoji}</span>${s.name}`;
+                    card.appendChild(chip);
+                });
+                weekTable.appendChild(card);
+            });
+            tomorrowTag.textContent = `明天：${weekDays[tomorrowIndex]}`;
+        }
+
+        function renderTomorrow() {
+            tomorrowSubjectsEl.innerHTML = '';
+            tomorrowSubjects.forEach(sub => {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.innerHTML = `<span>${sub.emoji}</span>${sub.name}`;
+                tomorrowSubjectsEl.appendChild(tag);
+            });
+        }
+
+        function renderReminders() {
+            remindList.innerHTML = '';
+            const essentials = ["别忘了水杯和口罩哦！"];
+            currentSpecials.forEach(s => essentials.push(s.text));
+            essentials.forEach(text => {
+                const li = document.createElement('li');
+                li.textContent = text;
+                remindList.appendChild(li);
+            });
+        }
+
+        function renderItems() {
+            itemsBank.innerHTML = '';
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'chip';
+                el.dataset.id = item.id;
+                el.innerHTML = `<span>${item.emoji}</span>${item.label}`;
+                el.addEventListener('click', () => toggleItem(el));
+                itemsBank.appendChild(el);
+            });
+        }
+
+        function toggleItem(el) {
+            const parent = el.parentElement;
+            if (parent === itemsBank) {
+                bagZone.appendChild(el);
+                el.classList.add('in-bag');
+            } else {
+                itemsBank.appendChild(el);
+                el.classList.remove('in-bag');
+            }
+        }
+
+        function getRequiredItems() {
+            const req = new Set(["water", "mask"]);
+            tomorrowSubjects.forEach(sub => {
+                if (sub.item) req.add(sub.item);
+            });
+            currentSpecials.forEach(s => req.add(s.itemId));
+            return req;
+        }
+
+        function checkBag() {
+            const selected = Array.from(bagZone.children).map(el => el.dataset.id);
+            const required = Array.from(getRequiredItems());
+            const missing = required.filter(id => !selected.includes(id));
+            if (missing.length) {
+                playChime(false);
+                const missingNames = missing.map(id => items.find(i => i.id === id)?.label || id).join("、");
+                showToast(`还缺：${missingNames}`);
+                return;
+            }
+
+            const extras = selected.filter(id => !required.includes(id));
+            if (extras.length) {
+                playChime(false);
+                const extraNames = extras.map(id => items.find(i => i.id === id)?.label || id).join("、");
+                showToast(`明天用不到：${extraNames}`);
+                return;
+            }
+
+            playChime(true);
+            showToast("整理完毕！你太细心啦");
+            starCount = Math.min(5, starCount + 1);
+            updateStars();
+            nextBuddyBtn.disabled = false;
+        }
+
+        function setupBuddy() {
+            currentBuddy = pickBuddy();
+            buddyEmojiEl.textContent = currentBuddy.emoji;
+            buddyNameEl.textContent = currentBuddy.name;
+            buddyWorryEl.textContent = `“${currentBuddy.worry}”`;
+            generateWeek();
+        }
+
+        checkPackBtn.addEventListener('click', checkBag);
+        nextBuddyBtn.addEventListener('click', () => { setupBuddy(); });
+        reshuffleBtn.addEventListener('click', generateWeek);
+
+        setupBuddy();
+    </script>
+</body>
+</html>

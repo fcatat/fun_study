@@ -475,15 +475,15 @@
                 desc = "复杂的订单";
             } else {
                 const ratio = Math.floor(Math.random() * 2) + 2; // 2 or 3
-                rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio });
-                
+            rules.push({ src: itemA, count: 1, tgt: itemB, tgtCount: ratio });
+            
                 // 问题：4~6个
                 const qCount = Math.floor(Math.random() * 3) + 4;
-                question = { item: itemA, count: qCount };
-                answerItem = itemB;
-                targetCount = qCount * ratio;
-                desc = "多多的订单";
-            }
+            question = { item: itemA, count: qCount };
+            answerItem = itemB;
+            targetCount = qCount * ratio;
+            desc = "多多的订单";
+        }
         }
         // Level 8-11: 挑战二级换算 (A->B->C)
         else if (levelIndex < 11) {
@@ -575,27 +575,27 @@
         sourceItem.id = 'source-drag-item'; 
         inventory.appendChild(sourceItem);
 
-    // 重置状态
-    currentItems = [];
-    renderRightPlate();
+        // 重置状态
+        currentItems = [];
+        renderRightPlate();
     resetVisual(); // 初始状态：水平不动（隐藏答案）
-}
+    }
 
-function renderRightPlate() {
+    function renderRightPlate() {
         const plateRight = document.getElementById('plate-answer');
         plateRight.innerHTML = '';
         currentItems.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'item in-plate';
             div.innerText = item;
-        div.onclick = () => {
-            currentItems.splice(index, 1);
-            renderRightPlate();
+            div.onclick = () => {
+                currentItems.splice(index, 1);
+                renderRightPlate();
             resetVisual(); // 移除物品后重置状态，不实时显示重量
-        };
-        plateRight.appendChild(div);
-    });
-}
+            };
+            plateRight.appendChild(div);
+        });
+    }
 
 // 新增：仅重置视觉，不计算重量
 function resetVisual() {
@@ -603,7 +603,7 @@ function resetVisual() {
     // 或者 updateBalanceVisual(-15); // 如果想模拟一开始左边重也可以，但建议水平更公平
 }
 
-function simulateWeight() {
+    function simulateWeight() {
         let targetCount = currentLevelData.targetCount;
         let currentCount = currentItems.length;
         
@@ -626,30 +626,30 @@ function simulateWeight() {
         rightBox.style.transform = `rotate(${-angle}deg)`;
     }
 
-function checkAnswer() {
-    const targetCount = currentLevelData.targetCount;
-    const currentCount = currentItems.length;
+    function checkAnswer() {
+        const targetCount = currentLevelData.targetCount;
+        const currentCount = currentItems.length;
 
     // 只有点击按钮时才显示真正的重量倾向
     simulateWeight();
 
-    if(currentCount === targetCount) {
+        if(currentCount === targetCount) {
         // simulateWeight 已经把角度设为 0 了
-        showMsg("⚖️ 平衡啦！答对了！", true);
+            showMsg("⚖️ 平衡啦！答对了！", true);
         Sounds.success(); // 音效：成功
-    } else {
+        } else {
         // simulateWeight 已经设置了倾斜角度
-        let hint = currentCount < targetCount ? "右边太轻啦！" : "右边太重啦！";
-        showMsg(hint, false);
+            let hint = currentCount < targetCount ? "右边太轻啦！" : "右边太重啦！";
+            showMsg(hint, false);
         Sounds.error(); // 音效：错误
+        }
     }
-}
 
-function resetLevel() {
-    currentItems = [];
-    renderRightPlate();
+    function resetLevel() {
+        currentItems = [];
+        renderRightPlate();
     resetVisual();
-}
+    }
 
     function showMsg(text, isSuccess) {
         const overlay = document.getElementById('msg-overlay');
@@ -727,14 +727,14 @@ function resetLevel() {
             const point = e.changedTouches ? e.changedTouches[0] : e;
             const elemBelow = document.elementFromPoint(point.clientX, point.clientY);
             
-    if(elemBelow && (elemBelow === dropZone || dropZone.contains(elemBelow))) {
-        const type = dragEl.getAttribute('data-type');
-        currentItems.push(type);
-        renderRightPlate();
-        createParticles(point.clientX, point.clientY);
+            if(elemBelow && (elemBelow === dropZone || dropZone.contains(elemBelow))) {
+                const type = dragEl.getAttribute('data-type');
+                currentItems.push(type);
+                renderRightPlate();
+                createParticles(point.clientX, point.clientY);
         resetVisual(); // 放置物品后重置状态，不实时显示重量
         Sounds.drop(); // 音效：放下
-    }
+            }
 
             document.body.removeChild(dragEl);
             dragEl = null;
