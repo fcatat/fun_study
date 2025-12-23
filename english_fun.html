@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>动物英语接龙</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zcool+KuaiLe&display=swap');
+
+        :root {
+            --sky: #C7E8FF;
+            --leaf: #B5E48C;
+            --sun: #FFD166;
+            --navy: #264653;
+            --accent: #4ECDC4;
+            --pink: #FF99C8;
+            --soft: #FAFBFD;
+            --card: rgba(255, 255, 255, 0.94);
+            --shadow: rgba(0, 0, 0, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Zcool KuaiLe", "Comic Sans MS", cursive, sans-serif;
+            background: linear-gradient(180deg, var(--sky) 0%, var(--soft) 55%, var(--leaf) 100%);
+            color: var(--navy);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .bunting { position: fixed; top: 0; left: 0; width: 100%; height: 50px; display: flex; pointer-events: none; z-index: 5; }
+        .bunting span { flex: 1; clip-path: polygon(0 0, 100% 0, 50% 100%); opacity: 0.8; }
+        .bunting span:nth-child(1){background:var(--sun);} .bunting span:nth-child(2){background:var(--accent);}
+        .bunting span:nth-child(3){background:var(--pink);} .bunting span:nth-child(4){background:#7DD3FC;}
+        .bunting span:nth-child(5){background:#FEB2B2;}
+
+        .btn-home {
+            position: fixed;
+            top: 15px; left: 15px;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px var(--shadow);
+            text-decoration: none; color: var(--navy); font-size: 1.4rem; z-index: 6;
+        }
+
+        header { margin-top: 70px; text-align: center; padding: 0 20px 10px; }
+        h1 { margin: 0; font-size: 2.2rem; color: var(--pink); text-shadow: 0 2px white; }
+        .subtitle { margin-top: 6px; font-size: 1.05rem; color: var(--navy); }
+
+        .board {
+            width: min(1100px, 94%);
+            background: var(--card);
+            border-radius: 30px;
+            padding: 22px;
+            box-shadow: 0 15px 30px var(--shadow);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 18px;
+            margin-bottom: 40px;
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 10px 20px var(--shadow);
+            border: 3px solid rgba(255,255,255,0.7);
+        }
+
+        .buddy {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .buddy .emoji {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: rgba(255,255,255,0.8);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.6rem;
+            box-shadow: inset 0 0 0 4px rgba(255,209,102,0.7);
+        }
+        .stars { display: flex; gap: 6px; }
+        .stars span { font-size: 1.4rem; opacity: 0.4; filter: grayscale(1); transition: 0.3s; }
+        .stars span.active { opacity: 1; filter: none; }
+
+        .dialog-card {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(233,249,255,0.8);
+            border: 2px dashed rgba(38,70,83,0.2);
+        }
+        .bubble {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 12px; border-radius: 14px;
+            background: #fff;
+            font-size: 1.1rem;
+        }
+
+        .choices { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 10px; margin-top: 12px; }
+        .choice-btn {
+            padding: 10px 12px;
+            border-radius: 16px;
+            border: 2px solid rgba(38,70,83,0.15);
+            background: #FAFBFD;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            transition: transform 0.15s, border 0.2s;
+        }
+        .choice-btn:hover { transform: translateY(-2px); }
+        .choice-btn.correct { border-color: var(--accent); background: rgba(78,205,196,0.15); }
+        .choice-btn.wrong { border-color: #F56565; }
+
+        .face-stage {
+            position: relative;
+            width: 100%;
+            padding-top: 80%;
+            background: linear-gradient(180deg, #FFEFD5, #FFD2A6);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 4px solid rgba(255,255,255,0.8);
+            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.05), 0 10px 20px var(--shadow);
+        }
+        .ear {
+            position: absolute;
+            width: 90px; height: 90px;
+            background: #FFD9A0;
+            border-radius: 50%;
+            top: 8%;
+            box-shadow: inset 0 0 0 6px rgba(255,255,255,0.6);
+            z-index: 1;
+        }
+        .ear.left { left: 4%; }
+        .ear.right { right: 4%; }
+
+        .face {
+            position: absolute;
+            width: 76%;
+            height: 76%;
+            left: 12%;
+            top: 12%;
+            background: radial-gradient(circle at 50% 35%, #FFEED9 0%, #FFD9A0 70%);
+            border-radius: 50%;
+            box-shadow: inset 0 0 0 6px rgba(255,255,255,0.7);
+        }
+        .muzzle {
+            position: absolute;
+            width: 62%;
+            height: 46%;
+            left: 19%;
+            bottom: 10%;
+            background: #FFEBD8;
+            border-radius: 45% 45% 50% 50%;
+            box-shadow: inset 0 0 0 4px rgba(255,255,255,0.7);
+            z-index: 1;
+        }
+        .cheek {
+            position: absolute;
+            width: 64px; height: 32px;
+            background: rgba(255,153,200,0.4);
+            border-radius: 50%;
+            top: 56%;
+            z-index: 1;
+        }
+        .cheek.left { left: 16%; }
+        .cheek.right { right: 16%; }
+
+        .target {
+            position: absolute;
+            width: 58px; height: 58px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.85);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem;
+            border: 2px dashed rgba(38,70,83,0.3);
+            cursor: pointer;
+            transition: transform 0.15s, background 0.2s, border 0.2s;
+            z-index: 2;
+        }
+        .target:hover { transform: scale(1.05); }
+        .target.good { background: rgba(78,205,196,0.2); border-color: var(--accent); }
+        .target.bad { background: rgba(245,101,101,0.2); border-color: #F56565; }
+
+        .toast {
+            position: fixed;
+            bottom: 26px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(38,70,83,0.95);
+            color: #fff; padding: 10px 18px;
+            border-radius: 20px; font-size: 1rem;
+            opacity: 0; transition: transform 0.3s, opacity 0.3s; z-index: 20;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:14px; background:rgba(78,205,196,0.15); }
+        .bar { height: 10px; border-radius: 6px; background: rgba(0,0,0,0.08); overflow: hidden; }
+        .bar-inner { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--pink)); transition: width 0.3s; }
+
+        button.primary {
+            font-family: inherit;
+            padding: 10px 16px;
+            border-radius: 16px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 960px) { .board { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="bunting"><span></span><span></span><span></span><span></span><span></span></div>
+    <a class="btn-home" href="index.html">🏠</a>
+    <header>
+        <h1>动物英语接龙 🐾</h1>
+        <p class="subtitle">看到字幕选回应，轻轻点对身体部位，收集勇气星！</p>
+    </header>
+
+    <section class="board">
+        <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="buddy">
+                    <div class="emoji" id="buddyEmoji">🦊</div>
+                    <div>
+                        <strong id="buddyName">Mimi the Cat</strong>
+                        <div class="pill">勇气星 <span class="stars" id="stars"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></span></div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="pill" id="roundInfo">第 1 / 5 题</div>
+                    <div class="bar" style="margin-top:6px;"><div class="bar-inner" id="progress"></div></div>
+                </div>
+            </div>
+
+            <div class="dialog-card">
+                <div class="bubble" id="questionText">Hello!</div>
+                <div class="choices" id="choices"></div>
+            </div>
+
+            <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:10px;">
+                <button class="primary" id="nextBtn" disabled>下一题 ➜</button>
+                <button class="primary" id="newBuddyBtn">换只动物</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong>Touch my face!</strong>
+                <div class="pill" id="facePrompt">Touch my nose.</div>
+            </div>
+            <div class="face-stage">
+                <div class="ear left"></div>
+                <div class="ear right"></div>
+                <div class="face" id="faceArea">
+                    <div class="muzzle"></div>
+                    <div class="cheek left"></div>
+                    <div class="cheek right"></div>
+                    <div class="target" data-part="eye" style="top:31%; left:32%;">👁️</div>
+                    <div class="target" data-part="eye" style="top:31%; right:32%;">👁️</div>
+                    <div class="target" data-part="nose" style="top:46%; left:46%;">👃</div>
+                    <div class="target" data-part="mouth" style="top:64%; left:44%;">👄</div>
+                    <div class="target" data-part="ear" style="top:30%; left:4%;">👂</div>
+                    <div class="target" data-part="ear" style="top:30%; right:4%;">👂</div>
+                    <div class="target" data-part="head" style="top:10%; left:46%;">🟤</div>
+                    <div class="target" data-part="hand" style="bottom:-6%; left:26%;">✋</div>
+                    <div class="target" data-part="hand" style="bottom:-6%; right:26%;">✋</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="toast" id="toast">Good job!</div>
+
+    <script>
+        const buddies = [
+            { name: "Mimi the Cat", emoji: "🐱" },
+            { name: "Bobo the Panda", emoji: "🐼" },
+            { name: "Dino the Little Rex", emoji: "🦖" },
+            { name: "Lulu the Bunny", emoji: "🐰" },
+            { name: "Pipa the Parrot", emoji: "🦜" }
+        ];
+
+        const questions = [
+            { q: "Hello!", options: ["Hello!", "Goodbye!", "Sorry.", "Thank you."], answer: 0 },
+            { q: "Good morning!", options: ["Good morning!", "Good night.", "See you.", "I am fine."], answer: 0 },
+            { q: "Thank you!", options: ["You’re welcome!", "Sorry.", "Hi!", "Good night."], answer: 0 },
+            { q: "Sorry.", options: ["It’s OK.", "Hello!", "Thank you.", "See you!"], answer: 0 },
+            { q: "What’s this?", options: ["It’s a book.", "I am a book.", "Goodbye!", "Thank you."], answer: 0 },
+            { q: "How many apples?", options: ["Three apples.", "Red apples!", "I am apple.", "Hello apples."], answer: 0 },
+            { q: "Who’s this?", options: ["This is my mom.", "Hello mom!", "Goodbye mom!", "It’s a cat."], answer: 0 },
+            { q: "Touch your nose!", options: ["OK! Nose!", "Hello nose!", "Good night nose!", "Bye nose!"], answer: 0 }
+        ];
+
+        const facePrompts = [
+            { text: "Touch my nose.", part: "nose" },
+            { text: "Touch my eyes.", part: "eye" },
+            { text: "Touch my mouth.", part: "mouth" },
+            { text: "Touch my ears.", part: "ear" },
+            { text: "Touch my head.", part: "head" },
+            { text: "High five my hand!", part: "hand" }
+        ];
+
+        const buddyEmojiEl = document.getElementById('buddyEmoji');
+        const buddyNameEl = document.getElementById('buddyName');
+        const starsEl = document.getElementById('stars').children;
+        const questionText = document.getElementById('questionText');
+        const choicesEl = document.getElementById('choices');
+        const nextBtn = document.getElementById('nextBtn');
+        const newBuddyBtn = document.getElementById('newBuddyBtn');
+        const roundInfo = document.getElementById('roundInfo');
+        const progress = document.getElementById('progress');
+        const toast = document.getElementById('toast');
+        const facePromptEl = document.getElementById('facePrompt');
+        const faceTargets = document.querySelectorAll('.target');
+
+        let starCount = 0;
+        let currentBuddy = null;
+        let currentIndex = 0;
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1200);
+        }
+
+        function updateStars() {
+            Array.from(starsEl).forEach((s, i) => s.classList.toggle('active', i < starCount));
+        }
+
+        function pickBuddy() {
+            currentBuddy = buddies[Math.floor(Math.random() * buddies.length)];
+            buddyEmojiEl.textContent = currentBuddy.emoji;
+            buddyNameEl.textContent = currentBuddy.name;
+        }
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function loadQuestion() {
+            const q = questions[currentIndex];
+            questionText.textContent = q.q;
+            choicesEl.innerHTML = '';
+            const shuffled = shuffle(q.options.map((opt, idx) => ({ opt, idx })));
+            shuffled.forEach(({ opt, idx }) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.textContent = opt;
+                btn.addEventListener('click', () => checkChoice(btn, idx === q.answer));
+                choicesEl.appendChild(btn);
+            });
+            roundInfo.textContent = `第 ${currentIndex + 1} / ${questions.length} 题`;
+            progress.style.width = `${(currentIndex) / questions.length * 100}%`;
+            nextBtn.disabled = true;
+        }
+
+        function checkChoice(btn, correct) {
+            Array.from(choicesEl.children).forEach(c => c.disabled = true);
+            if (correct) {
+                btn.classList.add('correct');
+                showToast("Good job!");
+                starCount = Math.min(5, starCount + 1);
+                updateStars();
+                nextBtn.disabled = false;
+            } else {
+                btn.classList.add('wrong');
+                showToast("Try again!");
+            }
+        }
+
+        function nextQuestion() {
+            currentIndex = (currentIndex + 1) % questions.length;
+            loadQuestion();
+        }
+
+        function loadFacePrompt() {
+            const p = facePrompts[Math.floor(Math.random() * facePrompts.length)];
+            facePromptEl.textContent = p.text;
+            faceTargets.forEach(t => t.classList.remove('good', 'bad'));
+            faceTargets.forEach(t => {
+                t.onclick = () => {
+                    const ok = t.dataset.part === p.part;
+                    t.classList.add(ok ? 'good' : 'bad');
+                    showToast(ok ? "Great!" : "Oops, try again!");
+                    if (ok) {
+                        starCount = Math.min(5, starCount + 1);
+                        updateStars();
+                        setTimeout(loadFacePrompt, 600);
+                    }
+                };
+            });
+        }
+
+        nextBtn.addEventListener('click', () => { nextQuestion(); });
+        newBuddyBtn.addEventListener('click', () => { pickBuddy(); });
+
+        pickBuddy();
+        loadQuestion();
+        loadFacePrompt();
+    </script>
+</body>
+</html>

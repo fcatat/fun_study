@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>糖果跳跳口算台 | 20以内加减法</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zcool+KuaiLe&display=swap');
+
+        :root {
+            --sky: #9ADCFB;
+            --sunset: #FF9EA8;
+            --mint: #A5D6A7;
+            --purple: #B39DDB;
+            --card: #FFFFFF;
+            --text: #37474F;
+            --line: #232F34;
+            --shadow: rgba(0,0,0,0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Zcool KuaiLe", "Comic Sans MS", cursive, sans-serif;
+            background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.4), transparent 25%),
+                        radial-gradient(circle at 80% 10%, rgba(255,255,255,0.4), transparent 22%),
+                        linear-gradient(135deg, var(--sky), #FCE4EC);
+            min-height: 100vh;
+            min-height: 100dvh;
+            color: var(--text);
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* 背景泡泡 */
+        .bubble {
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.35;
+            filter: blur(1px);
+            animation: float 12s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .bubble:nth-child(1) { width: 120px; height: 120px; background: var(--sunset); top: 12%; left: 6%; animation-duration: 15s; }
+        .bubble:nth-child(2) { width: 90px; height: 90px; background: var(--mint); top: 8%; right: 10%; animation-duration: 11s; }
+        .bubble:nth-child(3) { width: 140px; height: 140px; background: var(--purple); bottom: 12%; left: 12%; animation-duration: 13s; }
+        .bubble:nth-child(4) { width: 100px; height: 100px; background: #FFE082; bottom: 8%; right: 6%; animation-duration: 16s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-15px) translateX(8px) scale(1.02); }
+            100% { transform: translateY(0) translateX(0); }
+        }
+
+        .container {
+            width: min(1100px, 94vw);
+            margin: 0 auto;
+            padding: 22px 0 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-home {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #FFB300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #FF6F00;
+            font-size: 1.2rem;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.07);
+            z-index: 5;
+        }
+
+        header.hero {
+            text-align: center;
+            padding: 30px 20px 10px;
+        }
+        header.hero h1 {
+            margin: 0;
+            font-size: 2.3rem;
+            color: #0D47A1;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.8);
+        }
+        header.hero p {
+            margin: 8px 0 0 0;
+            color: #455A64;
+            font-size: 1.1rem;
+        }
+
+        .badge-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 12px 0 20px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: rgba(255,255,255,0.85);
+            border: 2px dashed rgba(0,0,0,0.08);
+            padding: 10px 14px;
+            border-radius: 14px;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.05);
+            color: #263238;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1rem;
+        }
+        .badge strong { color: #E53935; font-size: 1.2rem; }
+
+        .board {
+            background: var(--card);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: 0 16px 40px var(--shadow);
+            border: 4px solid rgba(255,255,255,0.8);
+        }
+
+        .board-top {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        @media (min-width: 760px) {
+            .board-top { grid-template-columns: 1.4fr 1fr; }
+        }
+
+        .question-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+            border-radius: 18px;
+            padding: 18px;
+            border: 3px solid #FFE082;
+            box-shadow: inset 0 0 0 3px rgba(255,255,255,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        .question-card::after {
+            content: '20以内';
+            position: absolute;
+            right: -18px;
+            top: 10px;
+            background: #FFEB3B;
+            color: #0D47A1;
+            padding: 6px 18px;
+            transform: rotate(12deg);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+        }
+
+        .equation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 2.4rem;
+            color: #1E88E5;
+            flex-wrap: wrap;
+        }
+        .operand {
+            background: #E3F2FD;
+            padding: 6px 16px;
+            border-radius: 14px;
+            min-width: 70px;
+            text-align: center;
+            border: 2px solid #90CAF9;
+            box-shadow: 0 6px 0 rgba(144,202,249,0.6);
+        }
+        .operator {
+            color: #E53935;
+            text-shadow: 1px 1px 0 #fff;
+        }
+        .equation-panel {
+            min-width: 210px;
+            text-align: center;
+        }
+        .number-pad {
+            margin-top: 18px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            align-items: stretch;
+        }
+        .number-pad button {
+            border: 2px solid #B3E5FC;
+            background: #E1F5FE;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1.1rem;
+            padding: 12px 0;
+            color: #0277BD;
+            box-shadow: 0 4px 0 rgba(2,119,189,0.2);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
+        }
+        .number-pad button:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+        .number-pad button.active {
+            background: linear-gradient(135deg, #40C4FF, #0288D1);
+            color: #fff;
+            border-color: #0288D1;
+            box-shadow: 0 4px 0 rgba(2,119,189,0.35);
+        }
+        @media (min-width: 640px) {
+            .number-pad { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+        }
+        @media (max-width: 480px) {
+            .number-pad button {
+                font-size: 0.95rem;
+                padding: 10px 0;
+            }
+        }
+        #answer {
+            width: 120px;
+            font-size: 2.2rem;
+            text-align: center;
+            padding: 10px;
+            border-radius: 12px;
+            border: 3px solid #FF80AB;
+            font-family: inherit;
+            outline: none;
+            background: #FFF1F4;
+            box-shadow: inset 0 -4px 0 rgba(255,128,171,0.4);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        button {
+            font-family: inherit;
+            font-size: 1.05rem;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00BCD4, #0288D1);
+            color: #fff;
+            box-shadow: 0 8px 0 #0277BD;
+        }
+        .btn-secondary {
+            background: #FFE082;
+            color: #5D4037;
+            border: 2px solid #FFCA28;
+            box-shadow: 0 6px 0 #FFB300;
+        }
+        button:active { transform: translateY(3px); box-shadow: none; }
+
+        .feedback {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 1.2rem;
+            min-height: 28px;
+        }
+
+        .record-card {
+            background: rgba(255,255,255,0.92);
+            border-radius: 18px;
+            padding: 18px;
+            border: 3px solid #C5CAE9;
+            box-shadow: inset 0 0 0 3px rgba(255,255,255,0.5);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .record-title {
+            font-size: 1.05rem;
+            color: #1A237E;
+        }
+        .record-progress {
+            font-size: 0.95rem;
+            color: #546E7A;
+        }
+        .record-progress strong { color: #E53935; }
+        .btn-restart {
+            border: 2px solid #81D4FA;
+            background: #E1F5FE;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: #0277BD;
+            box-shadow: 0 4px 0 rgba(2,119,189,0.2);
+        }
+        .btn-restart:active { transform: translateY(2px); box-shadow: none; }
+
+        .record-list {
+            flex: 1;
+            border: 2px dashed rgba(0,0,0,0.08);
+            border-radius: 14px;
+            padding: 10px;
+            background: rgba(255,255,255,0.8);
+            overflow-y: auto;
+            max-height: min(320px, 45vh);
+        }
+        .record-empty {
+            text-align: center;
+            color: #90A4AE;
+            font-size: 0.95rem;
+            padding: 20px 0;
+        }
+        .record-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            background: rgba(158,158,158,0.08);
+            margin-bottom: 8px;
+            border: 2px solid transparent;
+        }
+        .record-item:last-child { margin-bottom: 0; }
+        .record-item.ok {
+            background: rgba(129,199,132,0.15);
+            border-color: rgba(67,160,71,0.3);
+        }
+        .record-item.no {
+            background: rgba(255,138,128,0.12);
+            border-color: rgba(229,57,53,0.3);
+        }
+        .record-index {
+            font-weight: bold;
+            color: #3949AB;
+            min-width: 32px;
+        }
+        .record-body {
+            flex: 1;
+        }
+        .record-equation {
+            font-size: 1.05rem;
+            color: #263238;
+        }
+        .record-detail {
+            font-size: 0.85rem;
+            color: #607D8B;
+            margin-top: 2px;
+        }
+        .record-status {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+
+        .trophy-zone {
+            margin-top: 12px;
+            border-radius: 16px;
+            border: 2px dashed rgba(0,0,0,0.1);
+            padding: 12px;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .trophy-icon {
+            font-size: 3.4rem;
+            filter: drop-shadow(0 6px 0 rgba(0,0,0,0.12));
+        }
+        .trophy-text {
+            color: #37474F;
+            font-size: 1.05rem;
+            line-height: 1.4;
+        }
+
+        .footer-card {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px;
+        }
+        .pill {
+            background: rgba(255,255,255,0.9);
+            border-radius: 16px;
+            padding: 14px;
+            border: 2px dashed rgba(0,0,0,0.08);
+            box-shadow: 0 10px 0 rgba(0,0,0,0.04);
+            color: #37474F;
+            font-size: 0.98rem;
+        }
+        .pill strong { color: #0D47A1; }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 14px;
+            background: #FFEB3B;
+            top: -10px;
+            animation: drop 2.2s linear forwards;
+            z-index: 10;
+        }
+        @keyframes drop {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(120vh) rotate(300deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+
+    <a href="index.html" class="btn-home" title="回到学习乐园">🏠</a>
+
+    <div class="container">
+        <header class="hero">
+            <h1>糖果跳跳口算台</h1>
+            <p>让数字跟着你跳舞的 20 内加减游戏，点点跳跳就能看懂答案！</p>
+            <div class="badge-row">
+                <div class="badge">🍀 连对 <strong id="streak">0</strong></div>
+                <div class="badge">🏅 最高 <strong id="best">0</strong></div>
+                <div class="badge">🎯 已答 <strong id="total">0</strong> 题</div>
+            </div>
+        </header>
+
+        <div class="board">
+            <div class="board-top">
+                <div class="question-card">
+                    <div class="equation-panel">
+                        <div class="equation">
+                            <span class="operand" id="op-a">8</span>
+                            <span class="operator" id="op-symbol">+</span>
+                            <span class="operand" id="op-b">5</span>
+                            <span class="operator">=</span>
+                            <input type="number" id="answer" aria-label="请输入答案" autocomplete="off" />
+                        </div>
+                        <div class="actions">
+                            <button class="btn-primary" id="check-btn">检查答案 ✅</button>
+                            <button class="btn-secondary" id="new-btn">换一题 🎲</button>
+                        </div>
+                        <div class="feedback" id="feedback"></div>
+                    </div>
+                    <div class="number-pad" id="number-pad"></div>
+                </div>
+
+                <div class="record-card">
+                    <div class="record-header">
+                        <div>
+                            <div class="record-title">📔 答题记录</div>
+                            <div class="record-progress">
+                                已答 <strong id="answered-count">0</strong> / 20 · 正确 <strong id="correct-count">0</strong>
+                            </div>
+                        </div>
+                        <button class="btn-restart" id="restart-btn">再来一轮 🔁</button>
+                    </div>
+                    <div class="record-list" id="record-list">
+                        <div class="record-empty">每一道题都会记录在这里，准备开始吧！</div>
+                    </div>
+                    <div class="trophy-zone">
+                        <div class="trophy-icon" id="trophy-icon">🏆</div>
+                        <div class="trophy-text" id="trophy-text">完成 20 题后可解锁铜/银/金奖杯！</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-card">
+                <div class="pill">💡 <strong>小窍门</strong>：先盯住算式里的第一个数，在脑中站好起点，再决定向右（加法）或向左（减法）数步。</div>
+                <div class="pill">🎯 <strong>奖杯挑战</strong>：一轮 20 题，≥15 题铜杯、≥17 题银杯、全对就是金杯！</div>
+                <div class="pill">🧠 <strong>进阶挑战</strong>：把记录遮住，先默写答案再对照，训练脑内“数轴”和自检能力。</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MAX_QUESTIONS = 20;
+        const answerInput = document.getElementById('answer');
+        const feedback = document.getElementById('feedback');
+        const recordList = document.getElementById('record-list');
+        const answeredCountEl = document.getElementById('answered-count');
+        const correctCountEl = document.getElementById('correct-count');
+        const trophyIcon = document.getElementById('trophy-icon');
+        const trophyText = document.getElementById('trophy-text');
+        const checkBtn = document.getElementById('check-btn');
+        const newBtn = document.getElementById('new-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const numberPad = document.getElementById('number-pad');
+
+        const stats = { streak: 0, best: 0, total: 0 };
+        let current = { a: 8, b: 5, res: 13, op: '+' };
+        let answered = 0;
+        let correct = 0;
+        let sessionOver = false;
+        let questionActive = false;
+        let nextQuestionTimer = null;
+        let padActiveBtn = null;
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function newQuestion() {
+            if (sessionOver) return;
+            if (nextQuestionTimer) {
+                clearTimeout(nextQuestionTimer);
+                nextQuestionTimer = null;
+            }
+            clearPadHighlight();
+            if (answered >= MAX_QUESTIONS) {
+                endSession();
+                return;
+            }
+            questionActive = true;
+            const isAdd = Math.random() < 0.6;
+            let a, b;
+            if (isAdd) {
+                a = randomInt(0, 19);
+                b = randomInt(1, 20 - a);
+                current = { a, b, res: a + b, op: '+' };
+            } else {
+                a = randomInt(1, 20);
+                b = randomInt(1, a);
+                current = { a, b, res: a - b, op: '-' };
+            }
+
+            document.getElementById('op-a').textContent = current.a;
+            document.getElementById('op-b').textContent = current.b;
+            document.getElementById('op-symbol').textContent = current.op;
+
+            feedback.textContent = '';
+            answerInput.value = '';
+            answerInput.disabled = false;
+            checkBtn.disabled = false;
+            answerInput.focus();
+        }
+
+        function checkAnswer() {
+            if (sessionOver || !questionActive) return;
+            const raw = answerInput.value.trim();
+            if (raw === '' || Number.isNaN(Number(raw))) {
+                feedback.textContent = '请输入数字答案哦～';
+                feedback.style.color = '#E53935';
+                return;
+            }
+
+            questionActive = false;
+            const val = Number(raw);
+            const isCorrect = val === current.res;
+            clearPadHighlight();
+
+            stats.total += 1;
+            answered += 1;
+            if (isCorrect) {
+                stats.streak += 1;
+                stats.best = Math.max(stats.best, stats.streak);
+                correct += 1;
+                feedback.textContent = getPraise();
+                feedback.style.color = '#2E7D32';
+                celebrate();
+            } else {
+                stats.streak = 0;
+                feedback.textContent = `正确答案是 ${current.res}，记录下次就会进步！`;
+                feedback.style.color = '#E53935';
+            }
+
+            addRecordEntry(isCorrect, val);
+            updateStats();
+            updateProgress();
+
+            if (answered >= MAX_QUESTIONS) {
+                nextQuestionTimer = setTimeout(endSession, 700);
+            } else {
+                nextQuestionTimer = setTimeout(newQuestion, 700);
+            }
+        }
+
+        function addRecordEntry(ok, userAnswer) {
+            const placeholder = recordList.querySelector('.record-empty');
+            if (placeholder) placeholder.remove();
+
+            const item = document.createElement('div');
+            item.className = `record-item ${ok ? 'ok' : 'no'}`;
+
+            const index = document.createElement('div');
+            index.className = 'record-index';
+            index.textContent = `#${String(answered).padStart(2, '0')}`;
+
+            const body = document.createElement('div');
+            body.className = 'record-body';
+
+            const equation = document.createElement('div');
+            equation.className = 'record-equation';
+            equation.innerHTML = `${current.a} ${current.op} ${current.b} = <strong>${current.res}</strong>`;
+
+            const detail = document.createElement('div');
+            detail.className = 'record-detail';
+            if (ok) {
+                detail.textContent = `你的答案：${userAnswer}`;
+            } else {
+                detail.textContent = `你的答案：${userAnswer}，正确是 ${current.res}`;
+            }
+
+            body.appendChild(equation);
+            body.appendChild(detail);
+
+            const status = document.createElement('div');
+            status.className = 'record-status';
+            status.textContent = ok ? '✅' : '❌';
+
+            item.appendChild(index);
+            item.appendChild(body);
+            item.appendChild(status);
+            recordList.appendChild(item);
+            recordList.scrollTop = recordList.scrollHeight;
+        }
+
+        function updateProgress() {
+            answeredCountEl.textContent = answered;
+            correctCountEl.textContent = correct;
+        }
+
+        function getPraise() {
+            const list = ['烟花为你绽放！', '真会算，继续冲！', '加油加油！', '节奏感满分！', '像闪电一样快！'];
+            return list[randomInt(0, list.length - 1)];
+        }
+
+        function updateStats() {
+            document.getElementById('streak').textContent = stats.streak;
+            document.getElementById('best').textContent = stats.best;
+            document.getElementById('total').textContent = stats.total;
+        }
+
+        function celebrate() {
+            for (let i = 0; i < 14; i++) {
+                createConfetti();
+            }
+        }
+
+        function createConfetti() {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            const colors = ['#FFEB3B', '#FF80AB', '#82B1FF', '#C5E1A5', '#FFAB91'];
+            c.style.background = colors[randomInt(0, colors.length - 1)];
+            c.style.left = `${randomInt(5, 95)}%`;
+            c.style.animationDuration = `${randomInt(18, 30) / 10}s`;
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 2600);
+        }
+
+        function endSession() {
+            if (sessionOver) return;
+            if (nextQuestionTimer) {
+                clearTimeout(nextQuestionTimer);
+                nextQuestionTimer = null;
+            }
+            sessionOver = true;
+            answerInput.disabled = true;
+            checkBtn.disabled = true;
+            newBtn.disabled = true;
+            feedback.style.color = '#0D47A1';
+            feedback.textContent = `本轮完成！共答对 ${correct}/${MAX_QUESTIONS} 道题，看看奖杯吧！`;
+            updateTrophy();
+        }
+
+        function updateTrophy() {
+            let tier = null;
+            if (correct === MAX_QUESTIONS) tier = 'gold';
+            else if (correct >= 17) tier = 'silver';
+            else if (correct >= 15) tier = 'bronze';
+
+            if (!tier) {
+                const need = Math.max(0, 15 - correct);
+                trophyIcon.textContent = '🎯';
+                trophyText.textContent = need === 0 ? '再加把劲，距离奖杯只差一点点！' : `再答对 ${need} 题就能拿到铜奖杯！`;
+                return;
+            }
+
+            if (tier === 'gold') {
+                trophyIcon.textContent = '🥇';
+                trophyText.textContent = '全对 20 题！金奖杯闪闪发光！';
+            } else if (tier === 'silver') {
+                trophyIcon.textContent = '🥈';
+                trophyText.textContent = `答对 ${correct} 题，银奖杯到手！`;
+            } else {
+                trophyIcon.textContent = '🥉';
+                trophyText.textContent = `答对 ${correct} 题，铜奖杯奖励你坚持到底！`;
+            }
+        }
+
+        function restartSession() {
+            if (nextQuestionTimer) {
+                clearTimeout(nextQuestionTimer);
+                nextQuestionTimer = null;
+            }
+            answered = 0;
+            correct = 0;
+            sessionOver = false;
+            questionActive = false;
+            stats.streak = 0;
+            stats.best = 0;
+            stats.total = 0;
+            recordList.innerHTML = '<div class="record-empty">每一道题都会记录在这里，准备开始吧！</div>';
+            trophyIcon.textContent = '🏆';
+            trophyText.textContent = '完成 20 题后可解锁铜/银/金奖杯！';
+            feedback.textContent = '';
+            answerInput.disabled = false;
+            checkBtn.disabled = false;
+            newBtn.disabled = false;
+            updateStats();
+            updateProgress();
+            buildNumberPad();
+            newQuestion();
+        }
+
+        function buildNumberPad() {
+            if (!numberPad) return;
+            numberPad.innerHTML = '';
+            padActiveBtn = null;
+            for (let i = 0; i <= 20; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = i;
+                btn.dataset.value = i;
+                btn.addEventListener('click', () => selectPadValue(btn));
+                numberPad.appendChild(btn);
+            }
+        }
+
+        function selectPadValue(btn) {
+            if (sessionOver || !btn) return;
+            answerInput.value = btn.dataset.value;
+            answerInput.focus();
+            highlightPad(btn);
+        }
+
+        function highlightPad(btn) {
+            if (padActiveBtn) padActiveBtn.classList.remove('active');
+            padActiveBtn = btn;
+            padActiveBtn.classList.add('active');
+        }
+
+        function clearPadHighlight() {
+            if (padActiveBtn) {
+                padActiveBtn.classList.remove('active');
+                padActiveBtn = null;
+            }
+        }
+
+        checkBtn.addEventListener('click', checkAnswer);
+        newBtn.addEventListener('click', () => {
+            if (sessionOver) return;
+            newQuestion();
+        });
+        restartBtn.addEventListener('click', restartSession);
+
+        answerInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') checkAnswer();
+        });
+        answerInput.addEventListener('input', () => {
+            if (!sessionOver) clearPadHighlight();
+        });
+
+        restartSession();
+    </script>
+</body>
+</html>
