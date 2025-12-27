@@ -225,16 +225,49 @@
             }
         }
         #answer {
-            width: 120px;
-            font-size: 2.2rem;
+            width: 140px;
+            min-height: 66px;
+            font-size: 2.1rem;
             text-align: center;
             padding: 10px;
-            border-radius: 12px;
-            border: 3px solid #FF80AB;
-            font-family: inherit;
-            outline: none;
+            border-radius: 14px;
+            border: 3px dashed #FF80AB;
             background: #FFF1F4;
             box-shadow: inset 0 -4px 0 rgba(255,128,171,0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #E53935;
+            user-select: none;
+            position: relative;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+            cursor: pointer;
+        }
+        #answer::after {
+            content: attr(data-placeholder);
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #C2185B;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        #answer.filled::after { content: ''; }
+        #answer.dragover {
+            border-style: solid;
+            border-color: #F06292;
+            box-shadow: 0 0 0 4px rgba(240,98,146,0.18);
+            transform: scale(1.01);
+        }
+        #answer.disabled {
+            opacity: 0.6;
+            border-style: solid;
+        }
+        .number-pad button.dragging {
+            opacity: 0.7;
+            transform: scale(1.02);
         }
 
         .actions {
@@ -448,7 +481,7 @@
                             <span class="operator" id="op-symbol">+</span>
                             <span class="operand" id="op-b">5</span>
                             <span class="operator">=</span>
-                            <input type="number" id="answer" aria-label="请输入答案" autocomplete="off" />
+                            <div id="answer" role="button" tabindex="0" aria-label="拖动数字到这里"></div>
                         </div>
                         <div class="actions">
                             <button class="btn-primary" id="check-btn">检查答案 ✅</button>
@@ -489,7 +522,7 @@
 
     <script>
         const MAX_QUESTIONS = 20;
-        const answerInput = document.getElementById('answer');
+        const answerSlot = document.getElementById('answer');
         const feedback = document.getElementById('feedback');
         const recordList = document.getElementById('record-list');
         const answeredCountEl = document.getElementById('answered-count');
@@ -543,17 +576,17 @@
             document.getElementById('op-symbol').textContent = current.op;
 
             feedback.textContent = '';
-            answerInput.value = '';
-            answerInput.disabled = false;
+            resetAnswerSlot();
+            answerSlot.classList.remove('disabled');
+            answerSlot.setAttribute('aria-disabled', 'false');
             checkBtn.disabled = false;
-            answerInput.focus();
         }
 
         function checkAnswer() {
             if (sessionOver || !questionActive) return;
-            const raw = answerInput.value.trim();
-            if (raw === '' || Number.isNaN(Number(raw))) {
-                feedback.textContent = '请输入数字答案哦～';
+            const raw = answerSlot.dataset.value;
+            if (!raw || Number.isNaN(Number(raw))) {
+                feedback.textContent = '请把数字拖到空格里哦～';
                 feedback.style.color = '#E53935';
                 return;
             }
@@ -669,7 +702,8 @@
                 nextQuestionTimer = null;
             }
             sessionOver = true;
-            answerInput.disabled = true;
+            answerSlot.classList.add('disabled');
+            answerSlot.setAttribute('aria-disabled', 'true');
             checkBtn.disabled = true;
             newBtn.disabled = true;
             feedback.style.color = '#0D47A1';
@@ -718,7 +752,8 @@
             trophyIcon.textContent = '🏆';
             trophyText.textContent = '完成 20 题后可解锁铜/银/金奖杯！';
             feedback.textContent = '';
-            answerInput.disabled = false;
+            answerSlot.classList.remove('disabled');
+            answerSlot.setAttribute('aria-disabled', 'false');
             checkBtn.disabled = false;
             newBtn.disabled = false;
             updateStats();
@@ -736,6 +771,12 @@
                 btn.type = 'button';
                 btn.textContent = i;
                 btn.dataset.value = i;
+                btn.draggable = true;
+                btn.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', btn.dataset.value);
+                    btn.classList.add('dragging');
+                });
+                btn.addEventListener('dragend', () => btn.classList.remove('dragging'));
                 btn.addEventListener('click', () => selectPadValue(btn));
                 numberPad.appendChild(btn);
             }
@@ -743,8 +784,7 @@
 
         function selectPadValue(btn) {
             if (sessionOver || !btn) return;
-            answerInput.value = btn.dataset.value;
-            answerInput.focus();
+            setAnswerValue(btn.dataset.value);
             highlightPad(btn);
         }
 
@@ -761,19 +801,42 @@
             }
         }
 
+        function setAnswerValue(val) {
+            answerSlot.dataset.value = val;
+            answerSlot.textContent = val;
+            answerSlot.classList.add('filled');
+        }
+
+        function resetAnswerSlot() {
+            answerSlot.dataset.value = '';
+            answerSlot.textContent = '';
+            answerSlot.classList.remove('filled');
+            answerSlot.classList.remove('dragover');
+        }
+
+        answerSlot.addEventListener('dragover', e => {
+            if (sessionOver) return;
+            e.preventDefault();
+            answerSlot.classList.add('dragover');
+        });
+        answerSlot.addEventListener('dragleave', () => answerSlot.classList.remove('dragover'));
+        answerSlot.addEventListener('drop', e => {
+            if (sessionOver) return;
+            e.preventDefault();
+            const val = e.dataTransfer.getData('text/plain');
+            if (val === '' || Number.isNaN(Number(val))) return;
+            setAnswerValue(val);
+            answerSlot.classList.remove('dragover');
+            const btn = numberPad.querySelector(`button[data-value="${val}"]`);
+            if (btn) highlightPad(btn);
+        });
+
         checkBtn.addEventListener('click', checkAnswer);
         newBtn.addEventListener('click', () => {
             if (sessionOver) return;
             newQuestion();
         });
         restartBtn.addEventListener('click', restartSession);
-
-        answerInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') checkAnswer();
-        });
-        answerInput.addEventListener('input', () => {
-            if (!sessionOver) clearPadHighlight();
-        });
 
         restartSession();
     </script>
